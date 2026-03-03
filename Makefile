@@ -4,7 +4,7 @@ CC = c++
 CFLAGS = -Wall -Wextra -Werror -g3 -MMD -std=c++98
 
 SRCS = main.cpp\
-	Commands.cpp\
+	Command.cpp\
 	User.cpp\
 	Server.cpp\
 

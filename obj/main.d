@@ -1,1 +1,1 @@
-obj/main.o: main.cpp Server.hpp User.hpp Commands.hpp
+obj/main.o: main.cpp Server.hpp ft_irc.hpp User.hpp Command.hpp

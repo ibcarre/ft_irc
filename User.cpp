@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   User.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: homohame <homohame@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:35:35 by homohame          #+#    #+#             */
-/*   Updated: 2026/02/06 07:59:22 by homohame         ###   ########.fr       */
+/*   Updated: 2026/03/03 16:03:44 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,8 +36,11 @@ void User::setUsername(std::string username)
 
 void User::welcome()
 {
-	//message de co pour le serveur
 	std::string msg = RPL_WELCOME(nick);
 	send(fd, msg.c_str(), msg.length(), 0);
 	this->registered = true;
+}
+
+int	User::getFd() const {
+	return (fd);
 }

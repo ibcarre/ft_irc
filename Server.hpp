@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ibaaziz <ibaaziz@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 03:58:02 by homohame          #+#    #+#             */
-/*   Updated: 2026/02/24 15:29:26 by ibaaziz          ###   ########.fr       */
+/*   Updated: 2026/03/03 17:10:36 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
+#include "ft_irc.hpp"
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <netinet/in.h>
@@ -25,12 +26,15 @@
 # include <sys/poll.h>
 # include <iostream>
 # include <string>
+# include <stdlib.h>
+# include <stdio.h>
 # include <vector>
 # include <map>
 # include "User.hpp"
-# include "Commands.hpp"
+# include "Command.hpp"
 
 //typedef int (Server::*Method) ();
+class Command;
 
 class Server
 {
@@ -38,6 +42,7 @@ private:
 	int								serv_socket;
 	struct sockaddr_in				addr;
 	std::vector<struct pollfd>		fds;
+	std::vector<std::string>		buffers;
 	std::vector<User>				users;
 	int								port;
 	std::string						password;
@@ -54,7 +59,11 @@ public:
 	void	serverLooping();
 	void	handleDisconnection(int i);
 	void	handleConnection();
-	void	handleMessage(int i);
+	int		handleMessage(int i, std::string &msg);
+	void	registerUser(User &u, struct pollfd fd);
+	User	&getUser(int, bool*);
+	void	closeServer();
+	std::string getPassword();
 
 };
 
