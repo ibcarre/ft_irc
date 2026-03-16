@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:09:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/03 16:48:46 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/16 14:03:50 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,8 @@ class User
 		void	welcome();
 		bool	registered;
 		int		getFd() const;
+		std::string in_pwd;
+		bool disconnect;
 };
 
 #endif

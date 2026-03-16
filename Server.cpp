@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/03 17:06:26 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/16 15:39:16 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,7 +110,7 @@ void Server::serverLooping()
 				else {
 					buffer[n] = 0;
 					buffers[i - 1].append(buffer);
-					if (buffers[i - 1].find("\r\n"))
+					while (buffers[i - 1].find("\r\n") != std::string::npos)
 						handleMessage(i, buffers[i - 1]);
 				}
 			}
@@ -154,6 +154,7 @@ void Server::handleConnection()
 		buffers.push_back("");
 		User user(new_socket);
 		user.registered = false;
+		user.in_pwd = "";
 		users.push_back(user);
 	} while (new_socket != -1);
 }
@@ -165,14 +166,17 @@ void	Server::registerUser(User &u, struct pollfd fd) {
 	buffer[r] = 0;
 	(void) fd;
 	std::string s(buffer);
-	char x[] = "CAP * LS : \r\n";
-	send(u.getFd(), &x, sizeof(x), 0);
 	std::cout << s << std::endl;
 }
 
 
 std::string firstword(std::string &s, std::string &params) {
+	if (s == " \r\n") {
+		s.erase();
+		return (0);
+	}
 	std::string word;
+	std::cout << "OQISHJOQSD " << s << "\n";
 	size_t idx = s.find(' ');
 	if (idx == std::string::npos) {
 		std::string news = s;
@@ -180,17 +184,24 @@ std::string firstword(std::string &s, std::string &params) {
 		return (news);
 	}
 	word = s.substr(0,idx);
+	s.erase(0, idx + 1);
 	size_t idx2 = s.find("\r\n");
-	params = s.substr(idx + 1, idx2);
+	params = s.substr(0, idx2);
+	std::cout << params;
+	std::cout << "PARAMS SIZE " << params.length() << "\n";
 	s.erase(0, idx2 + 2); // 2 => "\r\n"
+	std::cout << "RESTE " << s;
 	return (word);
 }
 
 int Server::handleMessage(int i, std::string &msg)
 {
 	(void)i;
+	int fd = 0;
 	std::string params("");
 	std::string cmd = firstword(msg, params);
+	if (cmd.empty())
+		return (1);
 	bool isUser = true;
 	User u = getUser(fds[i].fd, &isUser);
 	if (!isUser) {
@@ -198,7 +209,9 @@ int Server::handleMessage(int i, std::string &msg)
 		return (0);
 	}
 	Command command(cmd, params, u, *this);
-	command.processCmd();
+	command.processCmd(&fd);
+	if (fd != 0)
+		handleDisconnection(i);
 	return (1);
 }
 

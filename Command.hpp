@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:19:13 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/03 17:11:05 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/16 14:02:56 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,8 +14,7 @@
 # define COMMAND_HPP
 
 #include "Server.hpp"
-
-#define RPL_WELCOME(client) ":localhost 001 " + std::string(client) + " :Bievenue sur le serv'bg !\r\n"
+#include "numerics.hpp"
 
 class User;
 class Server;
@@ -23,11 +22,6 @@ class Server;
 class Command
 {
 	private:
-		enum Authenticate {
-			CAP,
-			PASS,
-			NICK
-		};
 		std::string	_cmd;
 		std::string	_params;
 		User *_user;
@@ -37,9 +31,10 @@ class Command
 		void	cmdNick();
 		void	cmdUser();
 		void	cmdPong();
-		void	cmdCap();
+		void	cmdJoin();
+		void	answer(std::string);
 	public:
-		void processCmd();
+		void processCmd(int *fd);
 		Command(std::string &cmd, std::string &params, User &u, Server &s);
 };
 
