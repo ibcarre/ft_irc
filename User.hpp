@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:09:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/16 14:03:50 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/23 16:05:56 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,9 @@
 # include "Server.hpp"
 # include "Command.hpp"
 # include <string>
+# include "Channel.hpp"
+
+class Channel;
 
 class User
 {
@@ -23,11 +26,13 @@ class User
 		int			fd;
 		std::string	nick;
 		std::string	username;
+		Channel _channels;
 	public:
 		User(int fd);
 		~User();
-		void	setNick(std::string nick);
-		void	setUsername(std::string username);
+		void	setNick(std::string);
+		std::string getNick() const;
+		void	setUsername(std::string);
 		void	welcome();
 		bool	registered;
 		int		getFd() const;

@@ -6,14 +6,13 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 03:58:02 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/03 17:10:36 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/23 10:19:29 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-#include "ft_irc.hpp"
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <netinet/in.h>
@@ -64,7 +63,7 @@ public:
 	User	&getUser(int, bool*);
 	void	closeServer();
 	std::string getPassword();
-
+	std::vector<User>				getAllusers();
 };
 
 #endif

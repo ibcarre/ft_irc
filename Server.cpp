@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/16 15:39:16 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/17 14:50:32 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,15 +171,15 @@ void	Server::registerUser(User &u, struct pollfd fd) {
 
 
 std::string firstword(std::string &s, std::string &params) {
-	if (s == " \r\n") {
+	if (s == "\r\n") {
 		s.erase();
 		return (0);
 	}
 	std::string word;
-	std::cout << "OQISHJOQSD " << s << "\n";
 	size_t idx = s.find(' ');
 	if (idx == std::string::npos) {
 		std::string news = s;
+		news.resize(news.length() - 2);
 		s.erase();
 		return (news);
 	}
@@ -187,10 +187,7 @@ std::string firstword(std::string &s, std::string &params) {
 	s.erase(0, idx + 1);
 	size_t idx2 = s.find("\r\n");
 	params = s.substr(0, idx2);
-	std::cout << params;
-	std::cout << "PARAMS SIZE " << params.length() << "\n";
 	s.erase(0, idx2 + 2); // 2 => "\r\n"
-	std::cout << "RESTE " << s;
 	return (word);
 }
 
@@ -227,4 +224,8 @@ User &Server::getUser(int fd, bool *isUser) {
 
 std::string Server::getPassword() {
 	return (password);
+}
+
+std::vector<User> Server::getAllusers() {
+	return (users);
 }

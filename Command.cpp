@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/16 14:53:12 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/23 10:13:11 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ void Command::processCmd(int *fd) {
 			break;
 	}
 	if (i == nb) {
-		std::cout << "Wrong command\n"; //421 "<client> <command> : Unknown command
+		std::cout << "Unknown command\n"; //421 "<client> <command> : Unknown command
 		return ;
 	}
 	_user->disconnect = false;
@@ -52,22 +52,48 @@ void Command::processCmd(int *fd) {
 }
 
 void Command::answer(std::string msg) {
-	std::cout << "MSG SENT " << msg << "\n";
+	std::cout << "MSG SENT " << msg;
 	std::cout << "NB SENT " << send(_user->getFd(), msg.c_str(), msg.length(), 0) << "\n";
 }
 
 void Command::cmdPass() {
 	if (_user->registered) {
-		std::cerr << "Wrong command\n"; // ERR_ALREADYREGISTERED (462)
+		std::cerr << "Already registered\n"; // ERR_ALREADYREGISTERED (462)
 		answer(ERR_ALREADYREGISTERED);
 		return ;
 	}
-	_user->registered = true;
+	if (_params.empty()) {
+		std::cerr << "PASS empty parameters\n";
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+	}
 	_user->in_pwd = _params;
 }
 
 void Command::cmdNick() {
-	
+	std::cout << "NICKNAME IS " << _params << "\n";
+	if (_params.empty()) {
+		answer(ERR_NONICKNAMEGIVEN);
+		return ;
+	}
+	if (*(_params.begin()) == '#' || *(_params.begin()) == ':')
+	{
+		answer(ERR_ERRONEUSNICKNAME);
+		return ;
+	}
+	for (std::string::iterator it = _params.begin(); it != _params.end(); it++) {
+		if (!isprint(*it) || *it == ' ') {
+			answer(ERR_ERRONEUSNICKNAME);
+			return ;
+		}
+	}
+	for (std::vector<User>::iterator it = _server->getAllusers().begin(); it == _server->getAllusers().end() ; it++) {
+		if (_params == it->getNick())
+		{
+			answer(ERR_NICKNAMEINUSE(_params));
+			return ;
+		}
+	}
+	_user->setNick(_params);
 }
 
 void Command::cmdUser() {

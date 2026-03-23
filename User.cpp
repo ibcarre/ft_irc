@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:35:35 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/03 16:03:44 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/17 14:55:29 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ User::~User()
 
 void User::setNick(std::string nick)
 {
+	//tell everyone in channels that nick has changed
 	this->nick = nick;
 }
 
@@ -43,4 +44,8 @@ void User::welcome()
 
 int	User::getFd() const {
 	return (fd);
+}
+
+std::string User::getNick() const {
+	return (nick);
 }
