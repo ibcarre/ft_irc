@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:09:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/23 16:05:56 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/24 15:30:37 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,11 @@ class User
 		int			fd;
 		std::string	nick;
 		std::string	username;
-		Channel _channels;
+		std::vector<Channel> _channels;
 	public:
 		User(int fd);
 		~User();
+		void sendAllChannels(std::string);
 		void	setNick(std::string);
 		std::string getNick() const;
 		void	setUsername(std::string);

@@ -13,7 +13,6 @@ class Channel {
 		std::map<User, bool> users; //if the users are operators or not
 		std::string key;
 		int user_limit;
-		int nb;
 	public:
 		Channel(std::string password, User &user);
 		~Channel();
@@ -21,4 +20,8 @@ class Channel {
 		void removeUser(User&);
 		int setLimit(int);
 		void setPassword(std::string);
+		void sendtoUsers(std::string);
+		User getUser(int);
+		std::pair<User, bool> getMapUser(int);
+		int nb;
 };

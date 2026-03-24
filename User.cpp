@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:35:35 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/17 14:55:29 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/24 15:46:51 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,8 +26,10 @@ User::~User()
 
 void User::setNick(std::string nick)
 {
-	//tell everyone in channels that nick has changed
 	this->nick = nick;
+	std::string msg = "-!@" + SERVER + "NICK " + nick;
+	if (!registered)
+		answerto(msg, fd);
 }
 
 void User::setUsername(std::string username)
@@ -48,4 +50,10 @@ int	User::getFd() const {
 
 std::string User::getNick() const {
 	return (nick);
+}
+
+void User::sendAllChannels(std::string s) {
+	for (std::vector<Channel>::iterator it = _channels.begin() ; it != _channels.end() ; it++) {
+		it->sendtoUsers(s);
+	}
 }

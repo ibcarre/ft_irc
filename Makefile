@@ -7,6 +7,7 @@ SRCS = main.cpp\
 	Command.cpp\
 	User.cpp\
 	Server.cpp\
+	Channel.cpp\
 
 OBJ_DIR = obj
 

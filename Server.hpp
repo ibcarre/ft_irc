@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 03:58:02 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/23 10:19:29 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/24 11:52:33 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,5 +65,7 @@ public:
 	std::string getPassword();
 	std::vector<User>				getAllusers();
 };
+
+void	answerto(std::string, int);
 
 #endif

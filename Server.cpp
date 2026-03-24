@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/17 14:50:32 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/24 11:54:11 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -228,4 +228,9 @@ std::string Server::getPassword() {
 
 std::vector<User> Server::getAllusers() {
 	return (users);
+}
+
+void	answerto(std::string msg, int fd) {
+	std::cout << "MSG SENT " << msg;
+	std::cout << "NB SENT " << send(fd, msg.c_str(), msg.length(), 0) << "\n";
 }
