@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:35:35 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/24 15:46:51 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/31 14:03:47 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,8 @@
 
 User::User(int fd)
 {
+	oper = false;
 	this->fd = fd;
-	this->nick = "nick";
-	this->username = "username";
 	this->registered = false;
 }
 
@@ -26,22 +25,17 @@ User::~User()
 
 void User::setNick(std::string nick)
 {
+	std::string msg = "-!@" + HOST + " NICK " + nick + CRLF;
+	if (registered) {
+		msg = this->nick + "!" + username + "@" + HOST + " NICK " + nick + CRLF;
+	}
+	answerto(msg, fd);
 	this->nick = nick;
-	std::string msg = "-!@" + SERVER + "NICK " + nick;
-	if (!registered)
-		answerto(msg, fd);
 }
 
 void User::setUsername(std::string username)
 {
 	this->username = username;
-}
-
-void User::welcome()
-{
-	std::string msg = RPL_WELCOME(nick);
-	send(fd, msg.c_str(), msg.length(), 0);
-	this->registered = true;
 }
 
 int	User::getFd() const {
@@ -54,6 +48,22 @@ std::string User::getNick() const {
 
 void User::sendAllChannels(std::string s) {
 	for (std::vector<Channel>::iterator it = _channels.begin() ; it != _channels.end() ; it++) {
-		it->sendtoUsers(s);
+		it->sendtoUsers(s, *this);
 	}
+}
+
+std::string User::getUsername() const {
+	return (username);
+}
+
+std::string User::getRealName() const {
+	return (realname);
+}
+
+void User::setRealName(std::string s) {
+	realname = s;
+}
+
+std::vector<Channel> User::getChannels() const {
+	return (_channels);
 }

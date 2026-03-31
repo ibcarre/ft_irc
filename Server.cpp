@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/24 11:54:11 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/30 14:13:50 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,8 +21,7 @@ Server::Server(int port, std::string &password)
 {
 	this->port = port;
 	this->password = password;
-	//INITIALISATION DE MAP POUR COMMANDES A FAIRE
-	//TODO
+	time(&creation_time);
 }
 
 Server::~Server()
@@ -94,7 +93,6 @@ void Server::serverLooping()
 				int n = recv(fds[i].fd, buffer, sizeof(buffer) - 1, 0);
 				if (n < 0) {
 					if (errno == EAGAIN || errno == EWOULDBLOCK) {
-						std::cout << "QSDDQD\n";
 						continue;
 					}
 					else {
@@ -124,6 +122,7 @@ void Server::closeServer() {
 
 void Server::handleDisconnection(int i)
 {
+	//delete users from channels
 	std::cout << "Déconnexion fd: " << fds[i].fd << std::endl;
 	close(fds[i].fd);
 	fds.erase(fds.begin() + i);
@@ -154,7 +153,6 @@ void Server::handleConnection()
 		buffers.push_back("");
 		User user(new_socket);
 		user.registered = false;
-		user.in_pwd = "";
 		users.push_back(user);
 	} while (new_socket != -1);
 }
@@ -200,12 +198,12 @@ int Server::handleMessage(int i, std::string &msg)
 	if (cmd.empty())
 		return (1);
 	bool isUser = true;
-	User u = getUser(fds[i].fd, &isUser);
+	User &u = getUser(fds[i].fd, &isUser);
 	if (!isUser) {
 		std::cerr << "Error : failing to find User who used command " << cmd << "\n";
 		return (0);
 	}
-	Command command(cmd, params, u, *this);
+	Command command(cmd, params, u, *this, i);
 	command.processCmd(&fd);
 	if (fd != 0)
 		handleDisconnection(i);
@@ -231,6 +229,10 @@ std::vector<User> Server::getAllusers() {
 }
 
 void	answerto(std::string msg, int fd) {
-	std::cout << "MSG SENT " << msg;
+	std::cout << "MSG SENT " << msg << "\n";
 	std::cout << "NB SENT " << send(fd, msg.c_str(), msg.length(), 0) << "\n";
+}
+
+time_t Server::getCreation_time() {
+	return(creation_time);
 }

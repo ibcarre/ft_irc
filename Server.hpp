@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 03:58:02 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/24 11:52:33 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/30 17:07:01 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,9 @@
 # include <map>
 # include "User.hpp"
 # include "Command.hpp"
+#include <ctime>
+# define OPERNAME std::string("oper")
+# define OPERPASS std::string("pwd")
 
 //typedef int (Server::*Method) ();
 class Command;
@@ -45,6 +48,7 @@ private:
 	std::vector<User>				users;
 	int								port;
 	std::string						password;
+	time_t creation_time;
 	//std::map<std::string, Method>	commands; //A FAIRE //TODO
 
 	Server();
@@ -54,6 +58,7 @@ public:
 	Server(int port, std::string &password);
 	~Server();
 
+	time_t getCreation_time();
 	void	initServer();
 	void	serverLooping();
 	void	handleDisconnection(int i);

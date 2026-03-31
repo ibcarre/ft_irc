@@ -13,14 +13,14 @@ Channel::~Channel() {}
 int Channel::addUser(User&user, bool admin) {
 	if (nb == user_limit)
 		return (-1);
-	users.insert(std::map<User, bool>::value_type(user, admin));
 	nb++;
+	users.push_back(s_user(user, admin));
 	return (1);
 }
 
 void Channel::removeUser(User& user) {
-	for (std::map<User, bool>::iterator it = users.begin(); it != users.end(); it++) {
-		if (it->first.getFd() == user.getFd()) {
+	for (std::vector<s_user>::iterator it = users.begin(); it != users.end(); it++) {
+		if (it->user->getFd() == user.getFd()) {
 			users.erase(it);
 			nb--;
 			return ;
@@ -39,17 +39,17 @@ void Channel::setPassword(std::string password) {
 	password = password;
 }
 
-User Channel::getUser(int n) {
+User *Channel::getUser(int n) {
 	if (static_cast<size_t>(n) == users.size()) // 0 -> size -1
 		return (0);
-	return (users[n]);
+	return (users[n].user);
 }
 
-std::pair<User, bool> Channel::getMapUser(int n) {
+Channel::s_user Channel::getListUser(int n) {
 	if (static_cast<size_t>(n) == users.size()) // 0 -> size -1
 		return (*(users.begin()));
 	int i = 0;
-	std::map<User, bool>::iterator it;
+	std::vector<s_user>::iterator it;
 	for (it = users.begin(); it != users.end(); it++) {
 		if (i == n)
 			break;
@@ -58,10 +58,17 @@ std::pair<User, bool> Channel::getMapUser(int n) {
 	return (*it);
 }
 
-void Channel::sendtoUsers(std::string s) {
-	for (std::map<User, bool>::iterator it = users.begin(); it != users.end(); it++) {
-		answerto(s, it->first.getFd());
+void Channel::sendtoUsers(std::string s, User &u) {
+	bool i = true;
+	for (std::vector<s_user>::iterator it = users.begin(); it != users.end(); it++) {
+		if (it->user->getNick() == u.getNick()) {
+			if (i) {
+				answerto(s, it->user->getFd());
+				i = false;
+			}
+		}
+		else {
+			answerto(s, it->user->getFd());
+		}
 	}
 }
-
-//rajouter operateur less than dans user

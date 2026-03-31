@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:19:13 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/16 14:02:56 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/31 14:40:03 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@ class Server;
 class Command
 {
 	private:
+		const int userindex;
 		std::string	_cmd;
 		std::string	_params;
 		User *_user;
@@ -30,12 +31,19 @@ class Command
 		void	cmdPass();
 		void	cmdNick();
 		void	cmdUser();
-		void	cmdPong();
+		void	cmdPing();
 		void	cmdJoin();
+		void	oper();
+		void	mode();
+		void	kill();
+		void	quit();
+		void	motd();
 		void	answer(std::string);
+		void	authenticate();
+		std::vector<std::string> split();
 	public:
 		void processCmd(int *fd);
-		Command(std::string &cmd, std::string &params, User &u, Server &s);
+		Command(std::string &cmd, std::string &params, User &u, Server &s, int idx);
 };
 
 #endif

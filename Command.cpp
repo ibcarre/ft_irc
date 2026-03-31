@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/24 15:30:46 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/03/31 15:13:53 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ std::string clean_string(std::string s) {
 	return s;
 }
 
-Command::Command(std::string &cmd, std::string &params, User& user, Server &s)
+Command::Command(std::string &cmd, std::string &params, User& user, Server &s, int idx) : userindex(idx)
 {
 	_cmd = cmd;
 	_params = params;
@@ -28,11 +28,13 @@ Command::Command(std::string &cmd, std::string &params, User& user, Server &s)
 
 void Command::processCmd(int *fd) {
 	std::cout << "COMMAND " << _cmd << "\n";
+	std::cout << "PARAMS " << _params << "\n";
+	split();
 	size_t i;
-	const int nb = 5;
+	const int nb = 9;
 	typedef void    (Command::*fptr) (void);
-    fptr    func[] = {&Command::cmdPass, &Command::cmdNick, &Command::cmdUser, &Command::cmdPong, &Command::cmdJoin};
-	std::string arr[nb] = {"PASS", "NICK", "USER", "PONG", "JOIN"};
+    fptr    func[nb] = {&Command::cmdPass, &Command::cmdNick, &Command::cmdUser, &Command::cmdPing, &Command::cmdJoin, &Command::motd, &Command::oper, &Command::quit, &Command::kill};
+	std::string arr[nb] = {"PASS", "NICK", "USER", "PING", "JOIN", "MOTD", "OPER", "QUIT", "KILL"};
 	if (_cmd == "CAP") {
 		std::cout << send(_user->getFd(), ":ircserv CAP * LS\r\n", 19, MSG_DONTWAIT | MSG_NOSIGNAL) << "\n";
 		return ;
@@ -70,7 +72,6 @@ void Command::cmdPass() {
 }
 
 void Command::cmdNick() {
-	std::cout << "NICKNAME IS " << _params << "\n";
 	if (_params.empty()) {
 		answer(ERR_NONICKNAMEGIVEN);
 		return ;
@@ -94,17 +95,144 @@ void Command::cmdNick() {
 		}
 	}
 	_user->setNick(_params);
+	if (!_user->getUsername().empty() && !_user->registered) {
+		authenticate();
+	}
 }
 
 void Command::cmdUser() {
-	
+	//faire commande
+	size_t first = _params.find(' ');
+	if (first == std::string::npos){
+		_user->setUsername(_params.substr(0, _params.length() - 2));
+		_user->setRealName(_params.substr(0, _params.length() - 2));
+	}
+	else {
+		//si : alors tout apres est realname ou username et realname
+		_user->setUsername(_params.substr(0, first));
+		size_t last = _params.find_last_of(' ');
+		if (_params[last + 1] == ':') {
+			std::string name = _params.substr(last + 2);
+			_user->setRealName(name.substr(0, name.size() - 2));
+		}
+		else {
+			std::string name = _params.substr(last + 1);
+			_user->setRealName(name.substr(0, name.size() - 2));
+		}
+	}
+	std::cout << _user->getNick() << std::endl;
+	if (_user->getNick().empty())
+		return ;
+	authenticate();
 }
 
-void Command::cmdPong() {
-	
+void Command::cmdPing() {
+	if (_params.empty()) {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	answer(std::string("PONG :" + _params + CRLF));
 }
 
 void Command::cmdJoin() {
 	if (!_user->registered)
 		answer(ERR_NOTREGISTERED);
+}
+
+void Command::authenticate() {
+	if (_user->in_pwd != _server->getPassword()) {
+		answer(ERR_PASSWDMISMATCH);
+		_server->handleDisconnection(userindex);
+		return ;
+	}
+	std::string nick = _user->getNick();
+	int fd = _user->getFd();
+	_user->registered = true;
+	answerto(RPL_WELCOME(nick, _user->getUsername()),fd);
+	answerto(RPL_YOURHOST(nick) ,fd);
+	time_t c = _server->getCreation_time();
+	answerto(RPL_CREATED(nick, ctime(&c)),fd);
+	motd();
+}
+
+void Command::motd() {
+	std::string nick = _user->getNick();
+	int fd = _user->getFd();
+	answerto(RPL_MOTDSTART(nick), fd);
+	answerto(RPL_MOTD(nick), fd);
+	answerto(RPL_MOTDEND(nick), fd);
+}
+//peut pas finir par PASS, peut finir par NICK OU USER et commencer par n'importe lequel des TROIS
+//si NICK et USER alors connection se lance et teste PASS
+
+void	Command::oper() {
+	size_t first = _params.find(' ');
+	if (first == std::string::npos) {
+		answer(ERR_NEEDMOREPARAMS("OPER"));
+		return ;
+	}
+	std::string name = _params.substr(0, first);
+	std::string password = _params.substr(first + 1);
+	password.substr(0, password.size() - 2);
+	if (name == OPERNAME && password == OPERPASS) {
+		answer(SERVER + " :You are now an IRC operator" + CRLF);
+		_user->oper = true;
+	}
+	else {
+		answer(ERR_PASSWDMISMATCH);
+	}
+}
+
+void	Command::quit() {
+	if (_params.empty()) {
+		if (_user->getChannels().empty())
+			answer(QUITMSGNOPARAM(_user->getNick(), _user->getUsername()));
+		else {
+			_user->sendAllChannels(QUITMSGNOPARAM(_user->getNick(), _user->getUsername()));
+			//A TESTER UNE FOIS QUE JAI FAIT LES CHANS
+		}
+	}
+	else {
+		size_t i = _params.find(':');
+		if (i != std::string::npos) {
+			_params.erase(i, 1);
+		}
+		if (_user->getChannels().empty())
+			answer(QUITMSG(_user->getNick(), _user->getUsername(), _params));
+		else {
+			_user->sendAllChannels(QUITMSGNOPARAM(_user->getNick(), _user->getUsername()));
+			//A TESTER UNE FOIS QUE JAI FAIT LES CHANS
+		}
+	}
+	_server->handleDisconnection(userindex);
+}
+
+void	Command::kill() {
+	if (!_user->oper) {
+		answer(ERR_NOPRIVILEGES);
+		return ;
+	}
+	std::vector<std::string> params = split();
+	if (params.size() < 2) {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	//ERR_NOSUCHNICK
+}
+
+// JOIN PRIVMSG OPER QUIT ERROR
+// chan operator MODE +b +l +i +v +m TOPIC KICK INVITE
+// serveur operator OPER KILL ET RESTART
+
+std::vector<std::string>	Command::split() {
+	size_t i = _params.find(" ");
+	size_t i2 = 0;
+	std::vector<std::string> list;
+	while (i != std::string::npos) {
+		list.push_back(_params.substr(i2, i - i2));
+		i2 = i+1;
+		i = _params.find(' ' ,i+1);
+	}
+	list.push_back(_params.substr(i2, i-i2));
+	return (list);
 }
