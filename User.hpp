@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:09:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/31 13:58:52 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 16:07:57 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,7 @@ class User
 		bool oper;
 		User(int fd);
 		~User();
+		int discoFD;
 		void sendAllChannels(std::string);
 		void	setNick(std::string);
 		std::string getNick() const;

@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 03:58:02 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/30 17:07:01 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 19:14:49 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 # include <iostream>
 # include <string>
 # include <stdlib.h>
+#include <signal.h> 
 # include <stdio.h>
 # include <vector>
 # include <map>
@@ -55,6 +56,7 @@ private:
 	Server(const Server& copy);
 	Server &operator=(const Server& other);
 public:
+	static Server *_server;
 	Server(int port, std::string &password);
 	~Server();
 
@@ -66,7 +68,9 @@ public:
 	int		handleMessage(int i, std::string &msg);
 	void	registerUser(User &u, struct pollfd fd);
 	User	&getUser(int, bool*);
+	User	&getUser(std::string, bool&);
 	void	closeServer();
+	static void closeServer(int sig);
 	std::string getPassword();
 	std::vector<User>				getAllusers();
 };

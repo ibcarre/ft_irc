@@ -6,11 +6,12 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/31 15:13:53 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 19:03:51 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Command.hpp"
+#include <algorithm>
 
 std::string clean_string(std::string s) {
 	std::string chars = "\t\n\v\f\r ";
@@ -27,14 +28,15 @@ Command::Command(std::string &cmd, std::string &params, User& user, Server &s, i
 }
 
 void Command::processCmd(int *fd) {
+	std::transform(_cmd.begin(), _cmd.end(), _cmd.begin(), ::toupper);
 	std::cout << "COMMAND " << _cmd << "\n";
 	std::cout << "PARAMS " << _params << "\n";
 	split();
 	size_t i;
-	const int nb = 9;
+	const int nb = 11;
 	typedef void    (Command::*fptr) (void);
-    fptr    func[nb] = {&Command::cmdPass, &Command::cmdNick, &Command::cmdUser, &Command::cmdPing, &Command::cmdJoin, &Command::motd, &Command::oper, &Command::quit, &Command::kill};
-	std::string arr[nb] = {"PASS", "NICK", "USER", "PING", "JOIN", "MOTD", "OPER", "QUIT", "KILL"};
+    fptr    func[nb] = {&Command::cmdPass, &Command::cmdNick, &Command::cmdUser, &Command::cmdPing, &Command::cmdJoin, &Command::motd, &Command::oper, &Command::quit, &Command::kill, &Command::restart};
+	std::string arr[nb] = {"PASS", "NICK", "USER", "PING", "JOIN", "MOTD", "OPER", "QUIT", "KILL", "RESTART"};
 	if (_cmd == "CAP") {
 		std::cout << send(_user->getFd(), ":ircserv CAP * LS\r\n", 19, MSG_DONTWAIT | MSG_NOSIGNAL) << "\n";
 		return ;
@@ -218,6 +220,19 @@ void	Command::kill() {
 		return ;
 	}
 	//ERR_NOSUCHNICK
+	bool isUser = true;
+	User &u = _server->getUser(params[0], isUser);
+	if (!isUser) {
+		answer(ERR_NOSUCHNICK(params[0]));
+		return ;
+	}
+	std::string reason;
+	for (size_t i = 1; i < params.size(); i++) {
+		reason += params[i];
+	}
+	std::string msg = "YOU GOT KILLED : " + reason + CRLF;
+	answerto(msg, u.getFd());
+	_server->handleDisconnection(u.discoFD);
 }
 
 // JOIN PRIVMSG OPER QUIT ERROR
@@ -235,4 +250,14 @@ std::vector<std::string>	Command::split() {
 	}
 	list.push_back(_params.substr(i2, i-i2));
 	return (list);
+}
+
+void	Command::restart() {
+	if (!_user->oper) {
+		answer(ERR_NOPRIVILEGES);
+		return ;
+	}
+	_server->closeServer();
+	_server->initServer();
+	std::cout << "SERVER RESTARTED" << std::endl;
 }

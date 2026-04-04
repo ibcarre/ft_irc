@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/30 14:13:50 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 19:16:18 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,8 @@
 //{
 //	// TODO: insert return statement here
 //}
+
+Server *Server::_server = NULL;
 
 Server::Server(int port, std::string &password)
 {
@@ -97,7 +99,7 @@ void Server::serverLooping()
 					}
 					else {
 						perror("Recv failed\n");
-						closeServer();
+						closeServer(0);
 						return ;
 					}
 				}
@@ -117,6 +119,10 @@ void Server::serverLooping()
 }
 
 void Server::closeServer() {
+	for (int i = fds.size() - 1 ; i != 0 ; i--) {
+		handleDisconnection(i);
+	}
+	close(serv_socket);
 	std::cout << "Server Closed\n";
 }
 
@@ -126,6 +132,7 @@ void Server::handleDisconnection(int i)
 	std::cout << "Déconnexion fd: " << fds[i].fd << std::endl;
 	close(fds[i].fd);
 	fds.erase(fds.begin() + i);
+	users.erase(users.begin() + i);
 }
 
 void Server::handleConnection()
@@ -152,6 +159,7 @@ void Server::handleConnection()
 		fds.push_back(pfd);
 		buffers.push_back("");
 		User user(new_socket);
+		user.discoFD = fds.size() - 1;
 		user.registered = false;
 		users.push_back(user);
 	} while (new_socket != -1);
@@ -235,4 +243,24 @@ void	answerto(std::string msg, int fd) {
 
 time_t Server::getCreation_time() {
 	return(creation_time);
+}
+
+User	&Server::getUser(std::string nick, bool& isUser) {
+	int i = 0;
+	for (std::vector<User>::iterator it = users.begin(); it != users.end(); it++) {
+		if (it->getNick() == nick) {
+			isUser = true;
+			return (*it);
+		}
+		i++;
+	}
+	isUser = false;
+	return (*users.begin());
+}
+
+void Server::closeServer(int sig) {
+	(void) sig;
+	if (_server)
+		_server->closeServer();
+	exit(EXIT_SUCCESS);
 }

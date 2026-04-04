@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:19:13 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/31 14:40:03 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 18:18:54 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ class Command
 		void	cmdJoin();
 		void	oper();
 		void	mode();
+		void	restart();
 		void	kill();
 		void	quit();
 		void	motd();
