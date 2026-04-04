@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:19:13 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/04 18:18:54 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 19:56:58 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@ class Server;
 class Command
 {
 	private:
-		const int userindex;
 		std::string	_cmd;
 		std::string	_params;
 		User *_user;
@@ -44,7 +43,7 @@ class Command
 		std::vector<std::string> split();
 	public:
 		void processCmd(int *fd);
-		Command(std::string &cmd, std::string &params, User &u, Server &s, int idx);
+		Command(std::string &cmd, std::string &params, User &u, Server &s);
 };
 
 #endif

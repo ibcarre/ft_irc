@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:35:35 by homohame          #+#    #+#             */
-/*   Updated: 2026/03/31 14:03:47 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 20:21:38 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ User::User(int fd)
 	oper = false;
 	this->fd = fd;
 	this->registered = false;
+	nick = "";
 }
 
 User::~User()

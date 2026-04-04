@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/04 19:16:18 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 20:29:13 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,12 +128,31 @@ void Server::closeServer() {
 
 void Server::handleDisconnection(int i)
 {
-	//delete users from channels
 	std::cout << "Déconnexion fd: " << fds[i].fd << std::endl;
 	close(fds[i].fd);
 	fds.erase(fds.begin() + i);
 	users.erase(users.begin() + i);
 }
+
+void	Server::handleDisconnectionFD(int fd) {
+	std::cout << "Déconnexion fd: " << fd << std::endl;
+	size_t i;
+	for (i = 0; i < fds.size(); i++) {
+		if (fds[i].fd == fd)
+			break;
+	}
+	if (i == fds.size()) {
+		std::cerr << "WRONG FD" << std::endl;
+		return;
+	}
+	std::cout << i << std::endl;
+	std::cout << "NB USERS " << users.size() << std::endl;
+	std::cout << "FDS SIZE " << fds.size() << std::endl;
+	close(fd);
+	fds.erase(fds.begin() + i);
+	users.erase(users.begin() + i - 1);
+}
+
 
 void Server::handleConnection()
 {
@@ -159,7 +178,6 @@ void Server::handleConnection()
 		fds.push_back(pfd);
 		buffers.push_back("");
 		User user(new_socket);
-		user.discoFD = fds.size() - 1;
 		user.registered = false;
 		users.push_back(user);
 	} while (new_socket != -1);
@@ -211,7 +229,7 @@ int Server::handleMessage(int i, std::string &msg)
 		std::cerr << "Error : failing to find User who used command " << cmd << "\n";
 		return (0);
 	}
-	Command command(cmd, params, u, *this, i);
+	Command command(cmd, params, u, *this);
 	command.processCmd(&fd);
 	if (fd != 0)
 		handleDisconnection(i);
@@ -232,7 +250,7 @@ std::string Server::getPassword() {
 	return (password);
 }
 
-std::vector<User> Server::getAllusers() {
+std::vector<User>& Server::getAllusers() {
 	return (users);
 }
 

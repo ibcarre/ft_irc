@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 03:58:02 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/04 19:14:49 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 20:29:09 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,7 @@ public:
 	void	initServer();
 	void	serverLooping();
 	void	handleDisconnection(int i);
+	void	handleDisconnectionFD(int);
 	void	handleConnection();
 	int		handleMessage(int i, std::string &msg);
 	void	registerUser(User &u, struct pollfd fd);
@@ -72,7 +73,7 @@ public:
 	void	closeServer();
 	static void closeServer(int sig);
 	std::string getPassword();
-	std::vector<User>				getAllusers();
+	std::vector<User>				&getAllusers();
 };
 
 void	answerto(std::string, int);

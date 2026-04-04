@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/04 19:03:51 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 20:30:50 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ std::string clean_string(std::string s) {
 	return s;
 }
 
-Command::Command(std::string &cmd, std::string &params, User& user, Server &s, int idx) : userindex(idx)
+Command::Command(std::string &cmd, std::string &params, User& user, Server &s)
 {
 	_cmd = cmd;
 	_params = params;
@@ -89,7 +89,7 @@ void Command::cmdNick() {
 			return ;
 		}
 	}
-	for (std::vector<User>::iterator it = _server->getAllusers().begin(); it == _server->getAllusers().end() ; it++) {
+	for (std::vector<User>::iterator it = _server->getAllusers().begin(); it != _server->getAllusers().end() ; it++) {
 		if (_params == it->getNick())
 		{
 			answer(ERR_NICKNAMEINUSE(_params));
@@ -144,7 +144,7 @@ void Command::cmdJoin() {
 void Command::authenticate() {
 	if (_user->in_pwd != _server->getPassword()) {
 		answer(ERR_PASSWDMISMATCH);
-		_server->handleDisconnection(userindex);
+		_server->handleDisconnectionFD(_user->getFd());
 		return ;
 	}
 	std::string nick = _user->getNick();
@@ -206,7 +206,7 @@ void	Command::quit() {
 			//A TESTER UNE FOIS QUE JAI FAIT LES CHANS
 		}
 	}
-	_server->handleDisconnection(userindex);
+	_server->handleDisconnectionFD(_user->getFd());
 }
 
 void	Command::kill() {
@@ -232,7 +232,7 @@ void	Command::kill() {
 	}
 	std::string msg = "YOU GOT KILLED : " + reason + CRLF;
 	answerto(msg, u.getFd());
-	_server->handleDisconnection(u.discoFD);
+	_server->handleDisconnectionFD(u.getFd());
 }
 
 // JOIN PRIVMSG OPER QUIT ERROR
