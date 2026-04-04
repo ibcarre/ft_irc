@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/04 20:29:13 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 20:46:41 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,12 +145,12 @@ void	Server::handleDisconnectionFD(int fd) {
 		std::cerr << "WRONG FD" << std::endl;
 		return;
 	}
-	std::cout << i << std::endl;
-	std::cout << "NB USERS " << users.size() << std::endl;
-	std::cout << "FDS SIZE " << fds.size() << std::endl;
 	close(fd);
 	fds.erase(fds.begin() + i);
 	users.erase(users.begin() + i - 1);
+	std::cout << i << std::endl;
+	std::cout << "NB USERS " << users.size() << std::endl;
+	std::cout << "FDS SIZE " << fds.size() << std::endl;
 }
 
 

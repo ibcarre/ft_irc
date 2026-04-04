@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/04 20:30:50 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/04 20:51:36 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -228,7 +228,10 @@ void	Command::kill() {
 	}
 	std::string reason;
 	for (size_t i = 1; i < params.size(); i++) {
+		if (params[i][0] == ':')
+			params[i].erase(0, 1);
 		reason += params[i];
+		reason += ' ';
 	}
 	std::string msg = "YOU GOT KILLED : " + reason + CRLF;
 	answerto(msg, u.getFd());
