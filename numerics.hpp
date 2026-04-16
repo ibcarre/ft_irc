@@ -12,7 +12,7 @@
 
 #define ERR_ALREADYREGISTERED std::string(":") + SERVER + " : 462 Already Registered" + CRLF
 
-#define ERR_NEEDMOREPARAMS(cmd) std::string(":") + SERVER + " : " + cmd + "461 Need more params" + CRLF
+#define ERR_NEEDMOREPARAMS(cmd) std::string(":") + SERVER + " : " + cmd + " 461 Need more params" + CRLF
 
 #define ERR_NONICKNAMEGIVEN std::string(":") + SERVER + " : " + "431 No nickname" + CRLF
 
@@ -32,10 +32,12 @@
 
 #define RPL_MOTDEND(nick) ":" + SERVER + " 376 " + nick + " :End of MOTD" + CRLF
 
-#define QUITMSG(nick, username, params) ":" + nick + "!" + username + "@" + HOST + " QUIT " + ":" + params + nick + "\n" + nick + " is exiting the network with \"" + params + "\"" + CRLF
+#define QUITMSG(nick, username, params) ":" + nick + "!" + username + "@" + HOST + " QUIT " + ":" + params + " " + nick + "\n" + nick + " is exiting the network with \"" + params + "\"" + CRLF
 
 #define QUITMSGNOPARAM(nick, username) ":" + nick + "!" + username + "@" + HOST + " QUIT " + ":Quit: See you later " + nick + "\n" + nick + " is exiting the network" + CRLF
 
 #define ERR_NOPRIVILEGES SERVER + " :Permission Denied- You're not an IRC operator" + CRLF
 
 #define ERR_NOSUCHNICK(nick) SERVER + " " + nick + " :No such Nickname" + CRLF
+
+# define ERR_BADCHANNELKEY(channel) SERVER + " " + channel + " :Wrong key. Can't Join Channel" + CRLF

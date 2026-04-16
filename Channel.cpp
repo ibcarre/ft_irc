@@ -1,10 +1,11 @@
 #include "Channel.hpp"
 
-Channel::Channel(std::string password, User &user) {
+Channel::Channel(std::string aname, std::string password, User &user) {
 	if (!password.empty())
 		setPassword(password);
 	else
 		setPassword("");
+	Channel::name = aname;
 	addUser(user, true);
 }
 
@@ -71,4 +72,14 @@ void Channel::sendtoUsers(std::string s, User &u) {
 			answerto(s, it->user->getFd());
 		}
 	}
+}
+
+bool Channel::checkPassword(std::string inPass) {
+	if (inPass == key)
+		return (true);
+	return (false);
+}
+
+std::string Channel::getName() const {
+	return (name);
 }

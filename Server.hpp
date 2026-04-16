@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 03:58:02 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/04 20:29:09 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/14 18:08:23 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,12 +32,14 @@
 # include <map>
 # include "User.hpp"
 # include "Command.hpp"
+# include "Channel.hpp"
 #include <ctime>
 # define OPERNAME std::string("oper")
 # define OPERPASS std::string("pwd")
 
 //typedef int (Server::*Method) ();
 class Command;
+class Channel;
 
 class Server
 {
@@ -50,7 +52,7 @@ private:
 	int								port;
 	std::string						password;
 	time_t creation_time;
-	//std::map<std::string, Method>	commands; //A FAIRE //TODO
+	std::vector<Channel *> _channels;
 
 	Server();
 	Server(const Server& copy);
@@ -73,6 +75,9 @@ public:
 	void	closeServer();
 	static void closeServer(int sig);
 	std::string getPassword();
+	std::vector<Channel*> getChannels() const;
+	void addChannel(Channel &);
+	Channel *findChannel(std::string);
 	std::vector<User>				&getAllusers();
 };
 

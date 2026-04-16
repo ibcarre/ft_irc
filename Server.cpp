@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/04 20:46:41 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/14 18:10:43 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -281,4 +281,20 @@ void Server::closeServer(int sig) {
 	if (_server)
 		_server->closeServer();
 	exit(EXIT_SUCCESS);
+}
+
+std::vector<Channel*> Server::getChannels() const {
+	return (_channels);
+}
+
+Channel *Server::findChannel(std::string s) {
+	for (std::vector<Channel *>::iterator it = _channels.begin() ; it != _channels.end() ; it++) {
+		if ((*it)->getName() == s)
+			return (*it);
+	}
+	return (0);
+}
+
+void Server::addChannel(Channel &chan) {
+	_channels.push_back(&chan);
 }

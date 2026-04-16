@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/04 20:51:36 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/14 18:20:22 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,6 @@ void Command::processCmd(int *fd) {
 	std::transform(_cmd.begin(), _cmd.end(), _cmd.begin(), ::toupper);
 	std::cout << "COMMAND " << _cmd << "\n";
 	std::cout << "PARAMS " << _params << "\n";
-	split();
 	size_t i;
 	const int nb = 11;
 	typedef void    (Command::*fptr) (void);
@@ -97,38 +96,42 @@ void Command::cmdNick() {
 		}
 	}
 	_user->setNick(_params);
-	if (!_user->getUsername().empty() && !_user->registered) {
+	if (!(_user->getUsername()).empty() && !_user->registered) {
 		authenticate();
 	}
 }
 
 void Command::cmdUser() {
-	//faire commande
-	size_t first = _params.find(' ');
+	if (_user->registered) {
+		answer(ERR_ALREADYREGISTERED);
+		return ;
+	}	size_t first = _params.find(' ');
 	if (first == std::string::npos){
-		_user->setUsername(_params.substr(0, _params.length() - 2));
-		_user->setRealName(_params.substr(0, _params.length() - 2));
+		_user->setUsername(_params.substr(0, _params.length()));
+		_user->setRealName(_params.substr(0, _params.length()));
 	}
 	else {
-		//si : alors tout apres est realname ou username et realname
 		_user->setUsername(_params.substr(0, first));
 		size_t last = _params.find_last_of(' ');
 		if (_params[last + 1] == ':') {
 			std::string name = _params.substr(last + 2);
-			_user->setRealName(name.substr(0, name.size() - 2));
+			_user->setRealName(name);
 		}
 		else {
 			std::string name = _params.substr(last + 1);
-			_user->setRealName(name.substr(0, name.size() - 2));
+			_user->setRealName(name);
 		}
 	}
-	std::cout << _user->getNick() << std::endl;
 	if (_user->getNick().empty())
 		return ;
 	authenticate();
 }
 
 void Command::cmdPing() {
+	if (!_user->registered) {
+		answer(ERR_NOTREGISTERED);
+		return ;
+	}
 	if (_params.empty()) {
 		answer(ERR_NEEDMOREPARAMS(_cmd));
 		return ;
@@ -137,11 +140,60 @@ void Command::cmdPing() {
 }
 
 void Command::cmdJoin() {
-	if (!_user->registered)
+	if (!_user->registered) {
 		answer(ERR_NOTREGISTERED);
+		return ;
+	}
+	if (_params == "0") {
+		//leave all channels
+		return ;
+	}
+	std::vector<std::string> params = splitParams(' ');
+	std::vector<std::string> chans;
+	std::vector<std::string> pwd;
+	for (std::vector<std::string>::iterator it = params.begin(); it != params.end() ; it++) {
+		if ((*it)[0] == '#') {
+			it->erase(0, 1);
+			chans.push_back(*it);
+		}
+		else {
+			pwd.push_back(*it);
+		}
+	}
+	if (chans.size() == 0 || pwd.size() > chans.size()) {
+	 	answer(ERR_NEEDMOREPARAMS(_cmd));
+	 	return ;
+	}
+	for (size_t i = 0 ; i < chans.size(); i++) {
+		Channel *c = _server->findChannel(chans[i]);
+			std::string key;
+			if (pwd.size() < i)
+				key = "";
+			else
+				key = pwd[i];
+		if (!c) {
+			Channel newchan(chans[i], key, *_user);
+			_server->addChannel(newchan);
+		}
+		if (c) {
+			if (!c->checkPassword(key))
+			{
+				answer(ERR_BADCHANNELKEY(chans[i]));
+			}
+			else {
+				c->addUser(*_user, false);
+			}
+		}
+	}
+
 }
 
+// #foobar : channel foobar
+// &foobar : local channel => non supporté
+
 void Command::authenticate() {
+	std::cout << "NICKNAME IS " << _user->getNick() << std::endl;
+	std::cout << "USERNAME IS " << _user->getUsername() << std::endl;
 	if (_user->in_pwd != _server->getPassword()) {
 		answer(ERR_PASSWDMISMATCH);
 		_server->handleDisconnectionFD(_user->getFd());
@@ -158,6 +210,10 @@ void Command::authenticate() {
 }
 
 void Command::motd() {
+	if (!_user->registered) {
+		answer(ERR_NOTREGISTERED);
+		return ;
+	}
 	std::string nick = _user->getNick();
 	int fd = _user->getFd();
 	answerto(RPL_MOTDSTART(nick), fd);
@@ -168,6 +224,10 @@ void Command::motd() {
 //si NICK et USER alors connection se lance et teste PASS
 
 void	Command::oper() {
+	if (!_user->registered) {
+		answer(ERR_NOTREGISTERED);
+		return ;
+	}
 	size_t first = _params.find(' ');
 	if (first == std::string::npos) {
 		answer(ERR_NEEDMOREPARAMS("OPER"));
@@ -210,11 +270,15 @@ void	Command::quit() {
 }
 
 void	Command::kill() {
+	if (!_user->registered) {
+		answer(ERR_NOTREGISTERED);
+		return ;
+	}
 	if (!_user->oper) {
 		answer(ERR_NOPRIVILEGES);
 		return ;
 	}
-	std::vector<std::string> params = split();
+	std::vector<std::string> params = splitParams(' ');
 	if (params.size() < 2) {
 		answer(ERR_NEEDMOREPARAMS(_cmd));
 		return ;
@@ -242,20 +306,24 @@ void	Command::kill() {
 // chan operator MODE +b +l +i +v +m TOPIC KICK INVITE
 // serveur operator OPER KILL ET RESTART
 
-std::vector<std::string>	Command::split() {
-	size_t i = _params.find(" ");
+std::vector<std::string>	Command::splitParams(char c) {
+	size_t i = _params.find(c);
 	size_t i2 = 0;
 	std::vector<std::string> list;
 	while (i != std::string::npos) {
 		list.push_back(_params.substr(i2, i - i2));
 		i2 = i+1;
-		i = _params.find(' ' ,i+1);
+		i = _params.find(c ,i2);
 	}
 	list.push_back(_params.substr(i2, i-i2));
 	return (list);
 }
 
 void	Command::restart() {
+	if (!_user->registered) {
+		answer(ERR_NOTREGISTERED);
+		return ;
+	}
 	if (!_user->oper) {
 		answer(ERR_NOPRIVILEGES);
 		return ;
