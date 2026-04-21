@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/14 18:10:43 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/21 14:26:31 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,21 +122,30 @@ void Server::closeServer() {
 	for (int i = fds.size() - 1 ; i != 0 ; i--) {
 		handleDisconnection(i);
 	}
+	fds.clear();
+	buffers.clear();
+	_channels.clear();
 	close(serv_socket);
 	std::cout << "Server Closed\n";
 }
 
 void Server::handleDisconnection(int i)
 {
-	std::cout << "Déconnexion fd: " << fds[i].fd << std::endl;
+	std::cout << "Déconnexion fd: " << fds[i].fd << " I " << i << std::endl;
 	close(fds[i].fd);
 	fds.erase(fds.begin() + i);
-	users.erase(users.begin() + i);
+	std::vector<Channel *> c = (users.begin() + i - 1)->getChannels();
+	for (size_t i = 0; i < c.size(); i++) {
+		c[i]->removeUser(*(users.begin() + i));
+	}
+	users.erase(users.begin() + i - 1);
 }
 
 void	Server::handleDisconnectionFD(int fd) {
 	std::cout << "Déconnexion fd: " << fd << std::endl;
 	size_t i;
+	std::cout << "USERS SIZE " << users.size() << std::endl;
+	std::cout << "FDS SIZE " << fds.size() << std::endl;
 	for (i = 0; i < fds.size(); i++) {
 		if (fds[i].fd == fd)
 			break;
@@ -145,12 +154,14 @@ void	Server::handleDisconnectionFD(int fd) {
 		std::cerr << "WRONG FD" << std::endl;
 		return;
 	}
+	std::cout << "I " << i << std::endl;
 	close(fd);
 	fds.erase(fds.begin() + i);
+	std::vector<Channel *> c = (users.begin() + i - 1)->getChannels();
+	for (size_t i = 0; i < c.size(); i++) {
+		c[i]->removeUser(*(users.begin() + i));
+	}
 	users.erase(users.begin() + i - 1);
-	std::cout << i << std::endl;
-	std::cout << "NB USERS " << users.size() << std::endl;
-	std::cout << "FDS SIZE " << fds.size() << std::endl;
 }
 
 
@@ -197,7 +208,7 @@ void	Server::registerUser(User &u, struct pollfd fd) {
 std::string firstword(std::string &s, std::string &params) {
 	if (s == "\r\n") {
 		s.erase();
-		return (0);
+		return ("");
 	}
 	std::string word;
 	size_t idx = s.find(' ');
@@ -218,7 +229,6 @@ std::string firstword(std::string &s, std::string &params) {
 int Server::handleMessage(int i, std::string &msg)
 {
 	(void)i;
-	int fd = 0;
 	std::string params("");
 	std::string cmd = firstword(msg, params);
 	if (cmd.empty())
@@ -230,14 +240,12 @@ int Server::handleMessage(int i, std::string &msg)
 		return (0);
 	}
 	Command command(cmd, params, u, *this);
-	command.processCmd(&fd);
-	if (fd != 0)
-		handleDisconnection(i);
+	command.processCmd();
 	return (1);
 }
 
 User &Server::getUser(int fd, bool *isUser) {
-	for (std::vector<User>::iterator i = users.begin(); i < users.end(); i++) {
+	for (std::deque<User>::iterator i = users.begin(); i < users.end(); i++) {
 		if ((*i).getFd() == fd)
 			return (*i);
 	}
@@ -250,7 +258,7 @@ std::string Server::getPassword() {
 	return (password);
 }
 
-std::vector<User>& Server::getAllusers() {
+std::deque<User>& Server::getAllusers() {
 	return (users);
 }
 
@@ -265,7 +273,7 @@ time_t Server::getCreation_time() {
 
 User	&Server::getUser(std::string nick, bool& isUser) {
 	int i = 0;
-	for (std::vector<User>::iterator it = users.begin(); it != users.end(); it++) {
+	for (std::deque<User>::iterator it = users.begin(); it != users.end(); it++) {
 		if (it->getNick() == nick) {
 			isUser = true;
 			return (*it);
@@ -278,23 +286,26 @@ User	&Server::getUser(std::string nick, bool& isUser) {
 
 void Server::closeServer(int sig) {
 	(void) sig;
-	if (_server)
+	if (_server) {
 		_server->closeServer();
-	exit(EXIT_SUCCESS);
+	}
+	return ;
 }
 
-std::vector<Channel*> Server::getChannels() const {
+std::deque<Channel> Server::getChannels() const {
 	return (_channels);
 }
 
 Channel *Server::findChannel(std::string s) {
-	for (std::vector<Channel *>::iterator it = _channels.begin() ; it != _channels.end() ; it++) {
-		if ((*it)->getName() == s)
-			return (*it);
+	for (std::deque<Channel>::iterator it = _channels.begin() ; it != _channels.end() ; it++) {
+		if ((it)->getName() == s)
+			return (&(*it));
 	}
 	return (0);
 }
 
 void Server::addChannel(Channel &chan) {
-	_channels.push_back(&chan);
+	std::cout << "USER " << chan.getUser(0)->getNick() << " created " << chan.getName() << std::endl;
+	_channels.push_back(chan);
+	(_channels.begin())->getName();
 }

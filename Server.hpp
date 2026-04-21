@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 03:58:02 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/14 18:08:23 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/20 12:11:19 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 # include <sys/types.h>
 # include <sys/socket.h>
+#include <deque>
 # include <netinet/in.h>
 # include <arpa/inet.h>
 # include <unistd.h>
@@ -48,11 +49,11 @@ private:
 	struct sockaddr_in				addr;
 	std::vector<struct pollfd>		fds;
 	std::vector<std::string>		buffers;
-	std::vector<User>				users;
+	std::deque<User>				users;
 	int								port;
 	std::string						password;
 	time_t creation_time;
-	std::vector<Channel *> _channels;
+	std::deque<Channel> _channels;
 
 	Server();
 	Server(const Server& copy);
@@ -75,10 +76,10 @@ public:
 	void	closeServer();
 	static void closeServer(int sig);
 	std::string getPassword();
-	std::vector<Channel*> getChannels() const;
+	std::deque<Channel> getChannels() const;
 	void addChannel(Channel &);
 	Channel *findChannel(std::string);
-	std::vector<User>				&getAllusers();
+	std::deque<User>				&getAllusers();
 };
 
 void	answerto(std::string, int);

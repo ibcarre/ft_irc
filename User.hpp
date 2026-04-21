@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:09:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/04 19:55:20 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/21 16:04:44 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ class User
 		int			fd;
 		std::string	nick;
 		std::string	username;
-		std::vector<Channel> _channels;
+		std::vector<Channel *> _channels;
 		std::string realname;
 	public:
 		bool oper;
@@ -42,8 +42,9 @@ class User
 		bool	registered;
 		int		getFd() const;
 		std::string in_pwd;
-		bool disconnect;
-		std::vector<Channel> getChannels() const;
+		std::vector<Channel *> getChannels() const;
+		void clearChannels();
+		void addChannel(Channel &);
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/14 18:20:22 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/21 18:58:33 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,15 +27,15 @@ Command::Command(std::string &cmd, std::string &params, User& user, Server &s)
 	_server = &s;
 }
 
-void Command::processCmd(int *fd) {
+void Command::processCmd() {
 	std::transform(_cmd.begin(), _cmd.end(), _cmd.begin(), ::toupper);
 	std::cout << "COMMAND " << _cmd << "\n";
 	std::cout << "PARAMS " << _params << "\n";
 	size_t i;
-	const int nb = 11;
+	const int nb = 12;
 	typedef void    (Command::*fptr) (void);
-    fptr    func[nb] = {&Command::cmdPass, &Command::cmdNick, &Command::cmdUser, &Command::cmdPing, &Command::cmdJoin, &Command::motd, &Command::oper, &Command::quit, &Command::kill, &Command::restart};
-	std::string arr[nb] = {"PASS", "NICK", "USER", "PING", "JOIN", "MOTD", "OPER", "QUIT", "KILL", "RESTART"};
+    fptr    func[nb] = {&Command::cmdPass, &Command::cmdNick, &Command::cmdUser, &Command::cmdPing, &Command::cmdJoin, &Command::motd, &Command::oper, &Command::quit, &Command::kill, &Command::restart, &Command::cmdPrivMsg};
+	std::string arr[nb] = {"PASS", "NICK", "USER", "PING", "JOIN", "MOTD", "OPER", "QUIT", "KILL", "RESTART", "PRIVMSG"};
 	if (_cmd == "CAP") {
 		std::cout << send(_user->getFd(), ":ircserv CAP * LS\r\n", 19, MSG_DONTWAIT | MSG_NOSIGNAL) << "\n";
 		return ;
@@ -48,10 +48,7 @@ void Command::processCmd(int *fd) {
 		std::cout << "Unknown command\n"; //421 "<client> <command> : Unknown command
 		return ;
 	}
-	_user->disconnect = false;
     (this->*(func[i]))();
-	if (_user->disconnect)
-		*fd = _user->getFd();
 }
 
 void Command::answer(std::string msg) {
@@ -88,7 +85,7 @@ void Command::cmdNick() {
 			return ;
 		}
 	}
-	for (std::vector<User>::iterator it = _server->getAllusers().begin(); it != _server->getAllusers().end() ; it++) {
+	for (std::deque<User>::iterator it = _server->getAllusers().begin(); it != _server->getAllusers().end() ; it++) {
 		if (_params == it->getNick())
 		{
 			answer(ERR_NICKNAMEINUSE(_params));
@@ -145,7 +142,12 @@ void Command::cmdJoin() {
 		return ;
 	}
 	if (_params == "0") {
-		//leave all channels
+		std::vector<Channel *> chans = _user->getChannels();
+		for (size_t i = 0; i < chans.size() ; i++) {
+			chans[i]->removeUser(*_user);
+			chans[i]->sendtoUsers(MSG_PARTED(chans[i]->getName(), _user->getNick(), _user->getUsername()));
+		}
+		_user->clearChannels();
 		return ;
 	}
 	std::vector<std::string> params = splitParams(' ');
@@ -166,26 +168,41 @@ void Command::cmdJoin() {
 	}
 	for (size_t i = 0 ; i < chans.size(); i++) {
 		Channel *c = _server->findChannel(chans[i]);
-			std::string key;
-			if (pwd.size() < i)
-				key = "";
-			else
-				key = pwd[i];
+		std::string key;
+		if (pwd.size() == 0 || pwd.size()-1 < i) {
+			key = "";
+		}
+		else {
+			key = pwd[i];
+		}
 		if (!c) {
 			Channel newchan(chans[i], key, *_user);
 			_server->addChannel(newchan);
+			Channel *c = _server->findChannel(chans[i]);
+			_user->addChannel(*c);
 		}
-		if (c) {
+		else if (c) {
 			if (!c->checkPassword(key))
 			{
 				answer(ERR_BADCHANNELKEY(chans[i]));
 			}
+			if (c->invOnly) {
+				answer(ERR_INVITEONLYCHAN(c->getName()));
+			}
 			else {
-				c->addUser(*_user, false);
+				int i = c->addUser(*_user, false);
+				if (i == -1)
+					answer(ERR_CHANNELISFULL(c->getName()));
+				else
+					_user->addChannel(*c);
+			}
+			std::vector<Channel::s_user> c_users = c->getUsers();
+			std::cout << "CHANNEL " << c->getName() << std::endl;
+			for (std::vector<Channel::s_user>::iterator it = c_users.begin() ; it != c_users.end() ; it++) {
+				std::cout << "USER " << it->user->getNick() << "  ADMIN ? " << it->isAdmin << std::endl;
 			}
 		}
 	}
-
 }
 
 // #foobar : channel foobar
@@ -263,7 +280,6 @@ void	Command::quit() {
 			answer(QUITMSG(_user->getNick(), _user->getUsername(), _params));
 		else {
 			_user->sendAllChannels(QUITMSGNOPARAM(_user->getNick(), _user->getUsername()));
-			//A TESTER UNE FOIS QUE JAI FAIT LES CHANS
 		}
 	}
 	_server->handleDisconnectionFD(_user->getFd());
@@ -331,4 +347,41 @@ void	Command::restart() {
 	_server->closeServer();
 	_server->initServer();
 	std::cout << "SERVER RESTARTED" << std::endl;
+}
+
+void Command::cmdPrivMsg() {
+	std::vector<std::string> par = splitParams(' ');
+	if (par.empty()) {
+		answer(ERR_NEEDMOREPARAMS("PRIVMSG"));
+		return ;
+	}
+	std::string target = par[0];
+	size_t i;
+	par.erase(par.begin());
+	std::deque<User> &users = _server->getAllusers();
+	for (i = 0; i < users.size(); i++) {
+		if (users[i].getNick() == target)
+			break;
+	}
+	if (i != users.size()) {
+		User &u = users[i];
+		if (par.empty()) {
+			answer(ERR_NOTEXTTOSEND);
+			return;
+		}
+		if (par[0][0] == ':')
+			par[0].erase(0, 1);
+		if (par.empty()) {
+			answer(ERR_NOTEXTTOSEND);
+			return;
+		}
+		std::string msg;
+		for (size_t i = 0; i < par.size() ; i++) {
+			msg += par[i];
+			msg += ' ';
+		}
+		answerto(msg, u.getFd());
+		return ;
+	}
+	answer(ERR_NOSUCHNICK(target));
 }

@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:35:35 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/04 20:21:38 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/21 16:05:03 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,8 +48,8 @@ std::string User::getNick() const {
 }
 
 void User::sendAllChannels(std::string s) {
-	for (std::vector<Channel>::iterator it = _channels.begin() ; it != _channels.end() ; it++) {
-		it->sendtoUsers(s, *this);
+	for (std::vector<Channel *>::iterator it = _channels.begin() ; it != _channels.end() ; it++) {
+		(*it)->sendtoUsers(s);
 	}
 }
 
@@ -65,6 +65,18 @@ void User::setRealName(std::string s) {
 	realname = s;
 }
 
-std::vector<Channel> User::getChannels() const {
+std::vector<Channel *> User::getChannels() const {
 	return (_channels);
+}
+
+void User::addChannel(Channel &chan) {
+	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end() ; it++) {
+		if (&chan == (*it))
+			return ;
+	}
+	_channels.push_back(&chan);
+}
+
+void User::clearChannels() {
+	_channels.clear();
 }

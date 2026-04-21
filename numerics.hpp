@@ -40,4 +40,16 @@
 
 #define ERR_NOSUCHNICK(nick) SERVER + " " + nick + " :No such Nickname" + CRLF
 
-# define ERR_BADCHANNELKEY(channel) SERVER + " " + channel + " :Wrong key. Can't Join Channel" + CRLF
+#define ERR_BADCHANNELKEY(channel) SERVER + " " + channel + " :Wrong key. Can't Join Channel" + CRLF
+
+#define MSG_JOINED(channel, nick, username) ":" + nick + "!" + username + "@" + HOST + " JOIN " + " #" + channel + "      ; " + nick + " has joined the channel " + channel +CRLF
+
+#define RPL_ENDOFNAMES(nick, channel) ":" + HOST + " 366 " + nick + " #" + channel + " :End of Names LIST" + CRLF
+
+#define ERR_INVITEONLYCHAN(channel) SERVER + channel + " :Channel is invite only" + CRLF
+
+#define ERR_CHANNELISFULL(channel) SERVER + channel + " :Channel is full" + CRLF
+
+#define MSG_PARTED(channel, nick, username) ":" + nick + "!" + username + "@" + HOST + " PART " + " #" + channel + "      ; " + nick + " has parted the channel " + channel +CRLF
+
+#define ERR_NOTEXTTOSEND HOST + " :No text to send" + CRLF
