@@ -6,19 +6,25 @@ Channel::Channel(std::string &aname, std::string &password, User &user) {
 	else
 		isPassProtected = false;
 	Channel::name = aname;
-	nb = 0;
+	nb = 1;
 	user_limit = INT_MAX;
 	addUser(user, true);
 	sendtoUsers(MSG_JOINED(aname, user.getNick(), user.getUsername()));
 	std::cout << "CHANNEL'S PASSWORD IS " <<  key << std::endl;
-	ECanChangeTopic = false;
+	OperCanChangeTopic = false;
 }
 
 Channel::~Channel() {}
 
 int Channel::addUser(User&user, bool admin) {
-	if (nb == user_limit)
+	if (nb >= user_limit) {
+		answerto(ERR_CHANNELISFULL(name), user.getFd());
 		return (-1);
+	}
+	if (nb == 0) {
+		admin = true;
+		topic = "";
+	}
 	nb++;
 	for (std::vector<s_user>::iterator it = users.begin() ; it != users.end(); it ++) {
 		if (&user == (it->user))
@@ -36,7 +42,6 @@ int Channel::addUser(User&user, bool admin) {
 			nameReply += "@";
 		nameReply += users[i].user->getNick() + " ";
 	}
-	nameReply += "albert";
 	nameReply += CRLF;
 	answerto(nameReply, user.getFd());
 	answerto(RPL_ENDOFNAMES(user.getNick(), name), user.getFd());
@@ -45,16 +50,19 @@ int Channel::addUser(User&user, bool admin) {
 
 void Channel::removeUser(User& user) {
 	bool oper = false;
-	for (std::vector<s_user>::iterator it = users.begin(); it != users.end(); it++) {
-		if (it->user->getFd() == user.getFd()) {
-			users.erase(it);
+	//for (std::vector<s_user>::iterator it = users.begin(); it != users.end(); it++) {
+	std::vector<s_user>::iterator it = users.begin();
+	std::cout << it->user->getFd() << std::endl;
+	for (size_t i = 0; i < users.size(); i++) {
+		if (users[i].user->getFd() == user.getFd()) { //it->user->getFd()
+			users.erase(users.begin() + i);
 			nb--;
-			if (!it->isAdmin)
+			if (!users[i].isAdmin)
 				return ;
 			if (oper)
 				break;
 		}
-		else if (it->isAdmin)
+		else if (users[i].isAdmin)
 			oper = true;
 	}
 	if (!oper) {
@@ -108,6 +116,15 @@ void Channel::sendtoUsers(std::string s) {
 	}
 }
 
+void Channel::sendtoUsersnoOP(std::string s, User &u) {
+	for (std::vector<s_user>::iterator it = users.begin(); it != users.end(); it++) {
+		if (it->user->getNick() != u.getNick()) {
+			answerto(s, it->user->getFd());
+			std::cout << "MSG sent to " << it->user->getNick() << std::endl;
+		}
+	}
+}
+
 bool Channel::checkPassword(std::string &inPass) {
 	if (inPass.empty()) {
 		if (isPassProtected)
@@ -125,4 +142,52 @@ std::string Channel::getName() const {
 
 std::vector<Channel::s_user> Channel::getUsers() const {
 	return (users);
+}
+
+// -bl+i
+
+void Channel::modeCmd(std::vector<std::string> mode, User &u) {
+	std::cout << mode[0] << std::endl;
+	std::vector<char> minus;
+	std::vector<char> plus;
+	std::vector<std::string> args;
+	if (mode.size() > 2) {
+		answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
+		return ;
+	}
+	if (mode.size() == 2 && mode[0].find("o") == std::string::npos) {
+		answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
+		return ;
+	}
+	for (size_t i = 0; i < mode[0].size(); i++) {
+		if (mode[0][i] == '+')
+		{
+			i++;
+			while(mode[0][i] != '-' && i < mode[0].size()) {
+				plus.push_back(mode[0][i]);
+				i++;
+				if (mode[0][i] != 'l' && mode[0][i] != 'i' && mode[0][i] != 't' && mode[0][i] != 'k' && mode[0][i] != 'o') {
+					answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
+					return ;
+				}
+			}
+		}
+		if (mode[0][i] == '-')
+		{
+			i++;
+			while(mode[0][i] != '+' && i < mode[0].size()) {
+				minus.push_back(mode[0][i]);
+				i++;
+				if (mode[0][i] != 'l' && mode[0][i] != 'i' && mode[0][i] != 't' && mode[0][i] != 'k' && mode[0][i] != 'o') {
+					answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
+					return ;
+				}
+			}
+		}
+		i--;
+	}
+	if (minus.size() == 0 && plus.size() == 0) {
+		answerto(ERR_NEEDMOREPARAMS("MODE"),u.getFd());
+		return ;
+	}
 }

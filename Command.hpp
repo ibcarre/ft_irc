@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:19:13 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/21 17:27:04 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/23 10:43:42 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,6 +41,7 @@ class Command
 		void	motd();
 		void	answer(std::string);
 		void	authenticate();
+		std::string handleMsg(std::vector<std::string>, std::string);
 		std::vector<std::string> splitParams(char c);
 	public:
 		void processCmd();

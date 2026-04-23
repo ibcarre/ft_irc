@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/21 18:58:33 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/23 13:44:39 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,8 @@ void Command::processCmd() {
 	size_t i;
 	const int nb = 12;
 	typedef void    (Command::*fptr) (void);
-    fptr    func[nb] = {&Command::cmdPass, &Command::cmdNick, &Command::cmdUser, &Command::cmdPing, &Command::cmdJoin, &Command::motd, &Command::oper, &Command::quit, &Command::kill, &Command::restart, &Command::cmdPrivMsg};
-	std::string arr[nb] = {"PASS", "NICK", "USER", "PING", "JOIN", "MOTD", "OPER", "QUIT", "KILL", "RESTART", "PRIVMSG"};
+    fptr    func[nb] = {&Command::cmdPass, &Command::cmdNick, &Command::cmdUser, &Command::cmdPing, &Command::cmdJoin, &Command::motd, &Command::oper, &Command::quit, &Command::kill, &Command::restart, &Command::cmdPrivMsg, &Command::mode};
+	std::string arr[nb] = {"PASS", "NICK", "USER", "PING", "JOIN", "MOTD", "OPER", "QUIT", "KILL", "RESTART", "PRIVMSG", "MODE"};
 	if (_cmd == "CAP") {
 		std::cout << send(_user->getFd(), ":ircserv CAP * LS\r\n", 19, MSG_DONTWAIT | MSG_NOSIGNAL) << "\n";
 		return ;
@@ -349,7 +349,32 @@ void	Command::restart() {
 	std::cout << "SERVER RESTARTED" << std::endl;
 }
 
+std::string Command::handleMsg(std::vector<std::string> par, std::string target) {
+	if (par.empty()) {
+		answer(ERR_NOTEXTTOSEND);
+		return "";
+	}
+	if (par[0][0] == ':')
+		par[0].erase(0, 1);
+	if (par.empty()) {
+		answer(ERR_NOTEXTTOSEND);
+		return "";
+	}
+	std::string msg;
+	msg += ":" + _user->getNick() + " PRIVMSG " + target + " :";
+	for (size_t i = 0; i < par.size() ; i++) {
+		msg += par[i];
+		msg += ' ';
+	}
+	msg += CRLF;
+	return msg;
+}
+
 void Command::cmdPrivMsg() {
+	if (!_user->registered) {
+		answer(ERR_NOTREGISTERED);
+		return ;
+	}
 	std::vector<std::string> par = splitParams(' ');
 	if (par.empty()) {
 		answer(ERR_NEEDMOREPARAMS("PRIVMSG"));
@@ -365,23 +390,83 @@ void Command::cmdPrivMsg() {
 	}
 	if (i != users.size()) {
 		User &u = users[i];
-		if (par.empty()) {
-			answer(ERR_NOTEXTTOSEND);
-			return;
-		}
-		if (par[0][0] == ':')
-			par[0].erase(0, 1);
-		if (par.empty()) {
-			answer(ERR_NOTEXTTOSEND);
-			return;
-		}
-		std::string msg;
-		for (size_t i = 0; i < par.size() ; i++) {
-			msg += par[i];
-			msg += ' ';
-		}
+		std::string msg = handleMsg(par, target);
+		if (msg.empty())
+			return ;
 		answerto(msg, u.getFd());
 		return ;
 	}
-	answer(ERR_NOSUCHNICK(target));
+	const std::vector<Channel *> &channels = _user->getChannels();
+	if (target[0] == '#')
+		target.erase(0,1);
+	else {
+		answer(ERR_NEEDMOREPARAMS(target));
+		return ;
+	}
+	if (target.empty()) {
+		answer(ERR_NEEDMOREPARAMS("PRIVMSG"));
+		return ;
+	}
+	for (i = 0 ; i < channels.size(); i++) {
+		if (target == channels[i]->getName())
+			break;
+	}
+	if (i == channels.size()) {
+		answer(ERR_NOSUCHNICK(target));
+		return ;
+	}
+	Channel *c = channels[i];
+	target = "#" + target;
+	std::string msg = handleMsg(par, target);
+	if (msg.empty())
+		return ;
+	c->sendtoUsersnoOP(msg, *_user);
 }
+
+//MODE +l +i +t +k +o 
+//l : client limit 
+//i : invonly 
+//t : protected topic only oper can change topic
+//k : set key mode (needs a param)
+//o : MODE #channel +o ib => ib is now a channel operator
+
+void	Command::mode() {
+	if (!_user->registered) {
+		answer(ERR_NOTREGISTERED);
+		return ;
+	}
+	if (_params.empty()) {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	if (_params[0] != '#') {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	_params.erase(0, 1);
+	if (_params.empty()) {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	const std::vector<Channel *> &channels = _user->getChannels();
+	std::vector<std::string> par = splitParams(' ');
+	std::string target = par[0];
+	Channel *c = NULL;
+	for (size_t i = 0; i < channels.size(); i++) {
+		if (channels[i]->getName() == target) {
+			c = channels[i];
+			break;
+		}
+	}
+	if (!c) {
+		answer(ERR_NOSUCHCHANNEL(target));
+		return ;
+	}
+	par.erase(par.begin());
+	if (par.empty()) {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	c->modeCmd(par, *_user);
+}
+

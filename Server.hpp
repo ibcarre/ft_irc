@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 03:58:02 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/20 12:11:19 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/23 13:56:09 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,6 +29,7 @@
 # include <stdlib.h>
 #include <signal.h> 
 # include <stdio.h>
+#include <algorithm>
 # include <vector>
 # include <map>
 # include "User.hpp"

@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/21 14:26:31 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/23 14:45:40 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,8 +135,10 @@ void Server::handleDisconnection(int i)
 	close(fds[i].fd);
 	fds.erase(fds.begin() + i);
 	std::vector<Channel *> c = (users.begin() + i - 1)->getChannels();
-	for (size_t i = 0; i < c.size(); i++) {
-		c[i]->removeUser(*(users.begin() + i));
+	for (size_t j = 0; j < c.size(); j++) {
+		std::cout << "CHAN NAME " << c[j]->getName() << std::endl;
+		std::cout << "FD " << (users.begin() + j)->getFd() << std::endl;
+		c[j]->removeUser(users[j]);
 	}
 	users.erase(users.begin() + i - 1);
 }
@@ -158,7 +160,7 @@ void	Server::handleDisconnectionFD(int fd) {
 	close(fd);
 	fds.erase(fds.begin() + i);
 	std::vector<Channel *> c = (users.begin() + i - 1)->getChannels();
-	for (size_t i = 0; i < c.size(); i++) {
+	for (i = 0; i < c.size(); i++) {
 		c[i]->removeUser(*(users.begin() + i));
 	}
 	users.erase(users.begin() + i - 1);

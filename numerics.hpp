@@ -53,3 +53,7 @@
 #define MSG_PARTED(channel, nick, username) ":" + nick + "!" + username + "@" + HOST + " PART " + " #" + channel + "      ; " + nick + " has parted the channel " + channel +CRLF
 
 #define ERR_NOTEXTTOSEND HOST + " :No text to send" + CRLF
+
+#define ERR_NOSUCHCHANNEL(channel) SERVER + " " + channel + " :No such Channel" + CRLF
+
+#define ERR_UMODEUNKNOWNFLAG SERVER + " :Unknown MODE flag" + CRLF

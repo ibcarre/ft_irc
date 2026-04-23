@@ -22,8 +22,8 @@ class Channel {
 		std::string key;
 		std::string topic;
 		int user_limit;
-		bool ECanChangeTopic;
 	public:
+		bool OperCanChangeTopic;
 		bool invOnly;
 		Channel(std::string& name, std::string& password, User &user);
 		~Channel();
@@ -39,6 +39,8 @@ class Channel {
 		int nb;
 		std::string setTopic();
 		std::string getName() const;
+		void sendtoUsersnoOP(std::string, User &);
+		void modeCmd(std::vector<std::string>, User &);
 };
 
 // MODE - Change the channel’s mode:
