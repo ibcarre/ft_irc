@@ -22,6 +22,11 @@ class Channel {
 		std::string key;
 		std::string topic;
 		int user_limit;
+		void modeTopic(char, User &);
+		void modeInv(char, User &);
+		void modeLimit(char, User &);
+		void modeKey(char, User &);
+		void modeOp(char, std::vector<std::string>, User &);
 	public:
 		bool OperCanChangeTopic;
 		bool invOnly;

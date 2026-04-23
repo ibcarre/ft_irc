@@ -190,4 +190,51 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 		answerto(ERR_NEEDMOREPARAMS("MODE"),u.getFd());
 		return ;
 	}
+	mode.erase(mode.begin());
+	for (size_t i = 0; i < plus.size(); i++) {
+		if (plus[i] == 'l')
+			modeLimit('+', u);
+		else if (plus[i] == 'i')
+			modeInv('+', u);
+		else if (plus[i] == 't')
+			modeTopic('+', u);
+		else if (plus[i] == 'k')
+			modeKey('+', u);
+		else if (plus[i] == 'o')
+			modeOp('+', mode, u);
+	}
+	for (size_t i = 0; i < minus.size(); i++) {
+		if (minus[i] == 'l')
+			modeLimit('-', u);
+		else if (minus[i] == 'i')
+			modeInv('-', u);
+		else if (minus[i] == 't')
+			modeTopic('-', u);
+		else if (minus[i] == 'k')
+			modeKey('-', u);
+		else if (minus[i] == 'o')
+			modeOp('-', mode, u);
+	}
 }
+
+void Channel::modeTopic(char c, User &u) {
+	if (!u.oper) {
+		for (size_t i = 0; i < users.size(); i++) {
+			if (users[i].user->getFd() == u.getFd()) {
+				if (!users[i].isAdmin) {
+					answerto(ERR_CHANOPRIVSNEEDED(name), u.getFd());
+					return;
+				}
+			}
+		}
+	}
+	if (c == '+')
+		OperCanChangeTopic = true;
+	else
+		OperCanChangeTopic = false;
+}
+
+void modeInv(char);
+void modeLimit(char);
+void modeKey(char);
+void modeOp(char, std::vector<std::string>);

@@ -57,3 +57,5 @@
 #define ERR_NOSUCHCHANNEL(channel) SERVER + " " + channel + " :No such Channel" + CRLF
 
 #define ERR_UMODEUNKNOWNFLAG SERVER + " :Unknown MODE flag" + CRLF
+
+#define ERR_CHANOPRIVSNEEDED(channel) SERVER + " " + channel + " :You're not channel operator" + CRLF
