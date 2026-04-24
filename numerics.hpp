@@ -42,7 +42,7 @@
 
 #define ERR_BADCHANNELKEY(channel) SERVER + " #" + channel + " :Wrong key. Can't Join Channel" + CRLF
 
-#define MSG_JOINED(channel, nick, username) nick + "!" + username + "@" + SERVER + " JOIN #" + channel + CRLF
+#define MSG_JOINED(channel, nick, username) ":" + nick + "!" + username + "@" + SERVER + " JOIN :#" + channel + CRLF
 
 #define RPL_ENDOFNAMES(nick, channel) ":" + SERVER + " 366 " + nick + " #" + channel + " :End of Names LIST" + CRLF
 
@@ -62,8 +62,8 @@
 
 #define RPL_NOTOPIC(nick, username, channel) nick + "!" + username + "@" + HOST + " #" + channel + " :No topic is set" + CRLF
 
-#define RPL_TOPIC(nick, username, channel, topic) nick + "!" + username + "@" + HOST + " #" + channel + " :" + topic + CRLF
+#define RPL_TOPIC(nick, channel, topic) ":" + HOST + " 332 "+ nick + " #" + channel + " :" + topic + CRLF
 
 #define RPL_WHOREPLY(nick, channel, uNameTarget, nNameTarget, rNameTarget) ":" + HOST + " 352 " + nick + " #" + channel + " " + uNameTarget + " " + HOST + " " + SERVER + " " + nNameTarget + " H :1 " + rNameTarget + CRLF
 
-#define RPL_ENDOFWHO(channel) HOST + " #" + channel + " :End of WHO list" + CRLF
+#define RPL_ENDOFWHO(channel) ":" + HOST + " #" + channel + " :End of WHO list" + CRLF

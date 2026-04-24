@@ -32,12 +32,12 @@ int Channel::addUser(User&user, bool admin) {
 		if (&user == (it->user))
 			return (1);
 	}
+	if (!topic.empty()) {
+		answerto(RPL_TOPIC(user.getNick(), name, topic), user.getFd());
+	}
 	sendtoUsers(MSG_JOINED(name, user.getNick(), user.getUsername()));
 	users.push_back(s_user(user, admin));
-	if (!topic.empty()) {
-		answerto(RPL_TOPIC(user.getNick(), user.getUsername(), name, topic), user.getFd());
-	}
-	std::string nameReply = user.getNick() + "!" + user.getUsername() + "@" + HOST + " = #" + name + " :";
+	std::string nameReply = ":" + HOST + " 353 " + user.getNick() + " = #" + name + " :";
 	for (size_t i = 0; i < users.size(); i++) {
 		if (users[i].isAdmin)
 			nameReply += "@";
@@ -163,12 +163,10 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 	std::vector<char> plus;
 	std::vector<std::string> args;
 	if (mode.size() > 2) {
-		std::cout << "A" << std::endl;
 		answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
 		return ;
 	}
 	if (mode.size() == 2 && mode[0].find("o") == std::string::npos) {
-		std::cout << "B" << std::endl;
 		answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
 		return ;
 	}
@@ -179,7 +177,6 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 			while(mode[0][i] != '-' && i < mode[0].size()) {
 				plus.push_back(mode[0][i]);
 				if (mode[0][i] != 'l' && mode[0][i] != 'i' && mode[0][i] != 't' && mode[0][i] != 'k' && mode[0][i] != 'o') {
-					std::cout << "C" << std::endl;
 					answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
 					return ;
 				}
@@ -192,7 +189,6 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 			while(mode[0][i] != '+' && i < mode[0].size()) {
 				minus.push_back(mode[0][i]);
 				if (mode[0][i] != 'l' && mode[0][i] != 'i' && mode[0][i] != 't' && mode[0][i] != 'k' && mode[0][i] != 'o') {
-					std::cout << "D" << std::endl;
 					answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
 					return ;
 				}
@@ -279,7 +275,7 @@ void Channel::setTopic(std::vector<std::string> s, User &u) {
 			return ;
 		}
 		else {
-			answerto(RPL_TOPIC(u.getNick(), u.getUsername(), name, topic), u.getFd());
+			answerto(RPL_TOPIC(u.getNick(), name, topic), u.getFd());
 			return ;
 		}
 	}
@@ -296,6 +292,7 @@ void Channel::setTopic(std::vector<std::string> s, User &u) {
 		topic += s[i];
 		topic += " ";
 	}
-	std::string msg = "TOPIC #" + name + " :" + topic + "       ; Channel " + name + " got a new topic" + CRLF;
+	std::string msg = u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
+	msg += "TOPIC #" + name + " :" + topic + "       ; Channel " + name + " got a new topic" + CRLF;
 	sendtoUsers(msg);
 }
