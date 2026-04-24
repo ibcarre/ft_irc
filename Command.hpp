@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:19:13 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/23 10:43:42 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/24 14:28:42 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include "Server.hpp"
 #include "numerics.hpp"
+#include "Channel.hpp"
 
 class User;
 class Server;
@@ -40,7 +41,9 @@ class Command
 		void	quit();
 		void	motd();
 		void	answer(std::string);
+		void	topic();
 		void	authenticate();
+		void	WHO();
 		std::string handleMsg(std::vector<std::string>, std::string);
 		std::vector<std::string> splitParams(char c);
 	public:

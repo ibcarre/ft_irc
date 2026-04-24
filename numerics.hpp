@@ -40,22 +40,30 @@
 
 #define ERR_NOSUCHNICK(nick) SERVER + " " + nick + " :No such Nickname" + CRLF
 
-#define ERR_BADCHANNELKEY(channel) SERVER + " " + channel + " :Wrong key. Can't Join Channel" + CRLF
+#define ERR_BADCHANNELKEY(channel) SERVER + " #" + channel + " :Wrong key. Can't Join Channel" + CRLF
 
-#define MSG_JOINED(channel, nick, username) ":" + nick + "!" + username + "@" + HOST + " JOIN " + " #" + channel + "      ; " + nick + " has joined the channel " + channel +CRLF
+#define MSG_JOINED(channel, nick, username) nick + "!" + username + "@" + SERVER + " JOIN #" + channel + CRLF
 
-#define RPL_ENDOFNAMES(nick, channel) ":" + HOST + " 366 " + nick + " #" + channel + " :End of Names LIST" + CRLF
+#define RPL_ENDOFNAMES(nick, channel) ":" + SERVER + " 366 " + nick + " #" + channel + " :End of Names LIST" + CRLF
 
-#define ERR_INVITEONLYCHAN(channel) SERVER + channel + " :Channel is invite only" + CRLF
+#define ERR_INVITEONLYCHAN(channel) SERVER + " #" + channel + " :Channel is invite only" + CRLF
 
-#define ERR_CHANNELISFULL(channel) SERVER + channel + " :Channel is full" + CRLF
+#define ERR_CHANNELISFULL(channel) SERVER + " #" + channel + " :Channel is full" + CRLF
 
-#define MSG_PARTED(channel, nick, username) ":" + nick + "!" + username + "@" + HOST + " PART " + " #" + channel + "      ; " + nick + " has parted the channel " + channel +CRLF
+#define MSG_PARTED(channel, nick, username) ":" + nick + "!" + username + "@" + SERVER + " PART " + " #" + channel + "      ; " + nick + " has parted the channel " + channel +CRLF
 
 #define ERR_NOTEXTTOSEND HOST + " :No text to send" + CRLF
 
-#define ERR_NOSUCHCHANNEL(channel) SERVER + " " + channel + " :No such Channel" + CRLF
+#define ERR_NOSUCHCHANNEL(channel) SERVER + " #" + channel + " :No such Channel" + CRLF
 
 #define ERR_UMODEUNKNOWNFLAG SERVER + " :Unknown MODE flag" + CRLF
 
-#define ERR_CHANOPRIVSNEEDED(channel) SERVER + " " + channel + " :You're not channel operator" + CRLF
+#define ERR_CHANOPRIVSNEEDED(channel) SERVER + " #" + channel + " :You're not channel operator" + CRLF
+
+#define RPL_NOTOPIC(nick, username, channel) nick + "!" + username + "@" + HOST + " #" + channel + " :No topic is set" + CRLF
+
+#define RPL_TOPIC(nick, username, channel, topic) nick + "!" + username + "@" + HOST + " #" + channel + " :" + topic + CRLF
+
+#define RPL_WHOREPLY(nick, channel, uNameTarget, nNameTarget, rNameTarget) ":" + HOST + " 352 " + nick + " #" + channel + " " + uNameTarget + " " + HOST + " " + SERVER + " " + nNameTarget + " H :1 " + rNameTarget + CRLF
+
+#define RPL_ENDOFWHO(channel) HOST + " #" + channel + " :End of WHO list" + CRLF

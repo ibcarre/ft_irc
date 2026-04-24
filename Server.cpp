@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/23 14:45:40 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/24 15:37:16 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ Server::Server(int port, std::string &password)
 	this->port = port;
 	this->password = password;
 	time(&creation_time);
+	closed = false;
 }
 
 Server::~Server()
@@ -75,7 +76,7 @@ void Server::initServer()
 void Server::serverLooping()
 {
 	std::size_t i = 0;
-	while (poll(fds.data(), fds.size(), -1) >= 0)
+	while (poll(fds.data(), fds.size(), -1) >= 0 && !closed)
 	{
 		for (i = 0; i < fds.size(); i++)
 		{
@@ -110,7 +111,7 @@ void Server::serverLooping()
 				else {
 					buffer[n] = 0;
 					buffers[i - 1].append(buffer);
-					while (buffers[i - 1].find("\r\n") != std::string::npos)
+					while (buffers[i - 1].find("\r\n") != std::string::npos && !closed)
 						handleMessage(i, buffers[i - 1]);
 				}
 			}
@@ -137,7 +138,7 @@ void Server::handleDisconnection(int i)
 	std::vector<Channel *> c = (users.begin() + i - 1)->getChannels();
 	for (size_t j = 0; j < c.size(); j++) {
 		std::cout << "CHAN NAME " << c[j]->getName() << std::endl;
-		std::cout << "FD " << (users.begin() + j)->getFd() << std::endl;
+		std::cout << "FD " << (users.begin() + i - 1)->getFd() << std::endl;
 		c[j]->removeUser(users[j]);
 	}
 	users.erase(users.begin() + i - 1);
@@ -160,10 +161,10 @@ void	Server::handleDisconnectionFD(int fd) {
 	close(fd);
 	fds.erase(fds.begin() + i);
 	std::vector<Channel *> c = (users.begin() + i - 1)->getChannels();
-	for (i = 0; i < c.size(); i++) {
-		c[i]->removeUser(*(users.begin() + i));
+	for (size_t j = 0; j < c.size(); j++) {
+		c[j]->removeUser(*(users.begin() + i - 1));
 	}
-	users.erase(users.begin() + i - 1);
+	users.erase(users.begin() + (i - 1));
 }
 
 
@@ -193,6 +194,7 @@ void Server::handleConnection()
 		User user(new_socket);
 		user.registered = false;
 		users.push_back(user);
+		std::cout << "POST LOG USERS SIZE " << users.size() << std::endl;
 	} while (new_socket != -1);
 }
 
@@ -288,9 +290,10 @@ User	&Server::getUser(std::string nick, bool& isUser) {
 
 void Server::closeServer(int sig) {
 	(void) sig;
-	if (_server) {
+	if (_server && !(_server->closed)) {
 		_server->closeServer();
 	}
+	_server->closed = true;
 	return ;
 }
 

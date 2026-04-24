@@ -12,6 +12,8 @@ Channel::Channel(std::string &aname, std::string &password, User &user) {
 	sendtoUsers(MSG_JOINED(aname, user.getNick(), user.getUsername()));
 	std::cout << "CHANNEL'S PASSWORD IS " <<  key << std::endl;
 	OperCanChangeTopic = false;
+	invOnly = false;
+	mode = "+";
 }
 
 Channel::~Channel() {}
@@ -31,12 +33,11 @@ int Channel::addUser(User&user, bool admin) {
 			return (1);
 	}
 	sendtoUsers(MSG_JOINED(name, user.getNick(), user.getUsername()));
-	if (!topic.empty()) {
-		std::string msg = HOST + " " + name + " :" + topic;
-		answerto(msg, user.getFd());
-	}
 	users.push_back(s_user(user, admin));
-	std::string nameReply = ":" + HOST + " = " + "#" + name + " :";
+	if (!topic.empty()) {
+		answerto(RPL_TOPIC(user.getNick(), user.getUsername(), name, topic), user.getFd());
+	}
+	std::string nameReply = user.getNick() + "!" + user.getUsername() + "@" + HOST + " = #" + name + " :";
 	for (size_t i = 0; i < users.size(); i++) {
 		if (users[i].isAdmin)
 			nameReply += "@";
@@ -144,6 +145,16 @@ std::vector<Channel::s_user> Channel::getUsers() const {
 	return (users);
 }
 
+bool Channel::isUsAdmin(User &u) {
+	for (size_t i = 0; i < users.size(); i++) {
+		if (u.getNick() == users[i].user->getNick()) {
+			return (users[i].isAdmin);
+		}
+	}
+	return (false);
+}
+
+
 // -bl+i
 
 void Channel::modeCmd(std::vector<std::string> mode, User &u) {
@@ -152,10 +163,12 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 	std::vector<char> plus;
 	std::vector<std::string> args;
 	if (mode.size() > 2) {
+		std::cout << "A" << std::endl;
 		answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
 		return ;
 	}
 	if (mode.size() == 2 && mode[0].find("o") == std::string::npos) {
+		std::cout << "B" << std::endl;
 		answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
 		return ;
 	}
@@ -165,28 +178,37 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 			i++;
 			while(mode[0][i] != '-' && i < mode[0].size()) {
 				plus.push_back(mode[0][i]);
-				i++;
 				if (mode[0][i] != 'l' && mode[0][i] != 'i' && mode[0][i] != 't' && mode[0][i] != 'k' && mode[0][i] != 'o') {
+					std::cout << "C" << std::endl;
 					answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
 					return ;
 				}
+				i++;
 			}
 		}
-		if (mode[0][i] == '-')
+		else if (mode[0][i] == '-')
 		{
 			i++;
 			while(mode[0][i] != '+' && i < mode[0].size()) {
 				minus.push_back(mode[0][i]);
-				i++;
 				if (mode[0][i] != 'l' && mode[0][i] != 'i' && mode[0][i] != 't' && mode[0][i] != 'k' && mode[0][i] != 'o') {
+					std::cout << "D" << std::endl;
 					answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
 					return ;
 				}
+				i++;
 			}
 		}
+		else
+			i++;
 		i--;
 	}
 	if (minus.size() == 0 && plus.size() == 0) {
+		if (mode[0].length() == 1 && mode[0][0] == 'b') {
+			std::string msg = HOST + " #" + name + " :End of channel ban list" + CRLF;
+			answerto(msg, u.getFd());
+			return;
+		}
 		answerto(ERR_NEEDMOREPARAMS("MODE"),u.getFd());
 		return ;
 	}
@@ -228,13 +250,52 @@ void Channel::modeTopic(char c, User &u) {
 			}
 		}
 	}
-	if (c == '+')
+	if (c == '+') {
+		if (mode.find("t") == std::string::npos)
+			mode += "t";
 		OperCanChangeTopic = true;
-	else
+		std::string msg = "MODE #" + name + " +t           ; Only opers can change the channel topic" + CRLF;
+		answerto(msg, u.getFd());
+	}
+	else {
+		if (size_t i = mode.find("t") != std::string::npos)
+			mode.erase(i, 1);
 		OperCanChangeTopic = false;
+		std::string msg = "MODE #" + name + " -t           ; Everyone can change the channel topic" + CRLF;
+		answerto(msg, u.getFd());
+	}
 }
 
-void modeInv(char);
-void modeLimit(char);
-void modeKey(char);
-void modeOp(char, std::vector<std::string>);
+void Channel::modeInv(char, User &) {}
+void Channel::modeLimit(char, User &) {}
+void Channel::modeKey(char, User &) {}
+void Channel::modeOp(char, std::vector<std::string>, User &) {}
+
+void Channel::setTopic(std::vector<std::string> s, User &u) {
+	// check que s est pas vide et : si que 2 petits points alors clear
+	if (s.empty()) {
+		if (topic.empty()) {
+			answerto(RPL_NOTOPIC(u.getNick(), u.getUsername(), name), u.getFd());
+			return ;
+		}
+		else {
+			answerto(RPL_TOPIC(u.getNick(), u.getUsername(), name, topic), u.getFd());
+			return ;
+		}
+	}
+	if (s.size() == 1 && s[0].size() == 1 && s[0][0] == ':') {
+		topic = "";
+		std::string msg = "TOPIC #" + name + " :            ; Channel " + name + " got its topic cleared" + CRLF;
+		sendtoUsers(msg);
+		return ;
+	}
+	if (s[0][0] == ':')
+		s[0].erase(0,1);
+	topic = "";
+	for (size_t i = 0; i < s.size(); i++) {
+		topic += s[i];
+		topic += " ";
+	}
+	std::string msg = "TOPIC #" + name + " :" + topic + "       ; Channel " + name + " got a new topic" + CRLF;
+	sendtoUsers(msg);
+}

@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 03:58:02 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/23 13:56:09 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/24 14:23:31 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,6 +55,7 @@ private:
 	std::string						password;
 	time_t creation_time;
 	std::deque<Channel> _channels;
+	bool closed;
 
 	Server();
 	Server(const Server& copy);

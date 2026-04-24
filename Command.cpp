@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/23 13:44:39 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/24 15:38:24 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,10 +32,11 @@ void Command::processCmd() {
 	std::cout << "COMMAND " << _cmd << "\n";
 	std::cout << "PARAMS " << _params << "\n";
 	size_t i;
-	const int nb = 12;
+	const int nb = 14;
 	typedef void    (Command::*fptr) (void);
-    fptr    func[nb] = {&Command::cmdPass, &Command::cmdNick, &Command::cmdUser, &Command::cmdPing, &Command::cmdJoin, &Command::motd, &Command::oper, &Command::quit, &Command::kill, &Command::restart, &Command::cmdPrivMsg, &Command::mode};
-	std::string arr[nb] = {"PASS", "NICK", "USER", "PING", "JOIN", "MOTD", "OPER", "QUIT", "KILL", "RESTART", "PRIVMSG", "MODE"};
+    fptr    func[nb] = {&Command::cmdPass, &Command::cmdNick, &Command::cmdUser, &Command::cmdPing, &Command::cmdJoin, &Command::motd, &Command::oper, &Command::quit, &Command::kill, &Command::restart, 
+		&Command::cmdPrivMsg, &Command::mode, &Command::topic, &Command::WHO};
+	std::string arr[nb] = {"PASS", "NICK", "USER", "PING", "JOIN", "MOTD", "OPER", "QUIT", "KILL", "RESTART", "PRIVMSG", "MODE", "TOPIC", "WHO"};
 	if (_cmd == "CAP") {
 		std::cout << send(_user->getFd(), ":ircserv CAP * LS\r\n", 19, MSG_DONTWAIT | MSG_NOSIGNAL) << "\n";
 		return ;
@@ -400,7 +401,7 @@ void Command::cmdPrivMsg() {
 	if (target[0] == '#')
 		target.erase(0,1);
 	else {
-		answer(ERR_NEEDMOREPARAMS(target));
+		answer(ERR_NOSUCHNICK(target));
 		return ;
 	}
 	if (target.empty()) {
@@ -412,7 +413,7 @@ void Command::cmdPrivMsg() {
 			break;
 	}
 	if (i == channels.size()) {
-		answer(ERR_NOSUCHNICK(target));
+		answer(ERR_NOSUCHCHANNEL(target));
 		return ;
 	}
 	Channel *c = channels[i];
@@ -431,6 +432,7 @@ void Command::cmdPrivMsg() {
 //o : MODE #channel +o ib => ib is now a channel operator
 
 void	Command::mode() {
+// SANS PARAM => liste modes de CHANNELS
 	if (!_user->registered) {
 		answer(ERR_NOTREGISTERED);
 		return ;
@@ -464,9 +466,99 @@ void	Command::mode() {
 	}
 	par.erase(par.begin());
 	if (par.empty()) {
-		answer(ERR_NEEDMOREPARAMS(_cmd));
+		std::string msg = ":" + HOST + " 324 " + _user->getNick() + " #" + c->getName() + " " + c->mode + CRLF;
+		answer(msg);
 		return ;
 	}
 	c->modeCmd(par, *_user);
 }
 
+void	Command::topic() {
+	if (!_user->registered) {
+		answer(ERR_NOTREGISTERED);
+		return ;
+	}
+	std::vector<std::string> par = splitParams(' ');
+	if (par.empty()) {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	if (par[0][0] != '#') {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	std::string target = par[0];
+	target.erase(0, 1);
+	if (target.empty()) {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	std::vector<Channel *> chans = _user->getChannels();
+	Channel *c = NULL;
+	for (size_t i = 0; i < chans.size(); i++) {
+		if (chans[i]->getName() == target) {
+			c = chans[i];
+			break;
+		}
+	}
+	if (!c) {
+		answer(ERR_NOSUCHCHANNEL(target));
+		return ;
+	}
+	par.erase(par.begin());
+	if (c->OperCanChangeTopic) {
+		if (_user->oper || c->isUsAdmin(*_user))
+		{
+			c->setTopic(par, *_user);
+			return ;
+		}
+		else {
+			answer(ERR_CHANOPRIVSNEEDED(target));
+			return ;
+		}
+	}
+	else {
+		c->setTopic(par, *_user);
+	}
+}
+
+void	Command::WHO() {
+	if (!_user->registered) {
+		answer(ERR_NOTREGISTERED);
+		return ;
+	}
+	if (_params.empty()) {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	if (_params[0] != '#') {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	if (_params.find(' ') != std::string::npos) {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	_params.erase(0,1);
+	if (_params.empty()) {
+		answer(ERR_NEEDMOREPARAMS(_cmd));
+		return ;
+	}
+	const std::deque<Channel> &channels = _server->getChannels();
+	size_t i;
+	for (i = 0; i < channels.size() ; i++) {
+		if (_params == channels[i].getName()) {
+			break;
+		}
+	}
+	if (i == channels.size()) {
+		answer(ERR_NOSUCHCHANNEL(_params));
+		return ;
+	}
+	const Channel &c = channels[i];
+	const std::vector<Channel::s_user> &u = channels[i].getUsers();
+	for (i = 0; i < u.size(); i++) {
+		answer(RPL_WHOREPLY(_user->getNick(), c.getName(), u[i].user->getUsername(),u[i].user->getNick(), u[i].user->getRealName()));
+	}
+	answer(RPL_ENDOFWHO(c.getName()));
+}

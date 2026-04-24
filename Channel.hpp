@@ -28,6 +28,7 @@ class Channel {
 		void modeKey(char, User &);
 		void modeOp(char, std::vector<std::string>, User &);
 	public:
+		std::string mode;
 		bool OperCanChangeTopic;
 		bool invOnly;
 		Channel(std::string& name, std::string& password, User &user);
@@ -42,10 +43,12 @@ class Channel {
 		s_user getListUser(int);
 		std::vector<s_user> getUsers() const;
 		int nb;
-		std::string setTopic();
+		std::string getTopic();
+		void setTopic(std::vector<std::string>, User &);
 		std::string getName() const;
 		void sendtoUsersnoOP(std::string, User &);
 		void modeCmd(std::vector<std::string>, User &);
+		bool isUsAdmin(User &);
 };
 
 // MODE - Change the channel’s mode:
