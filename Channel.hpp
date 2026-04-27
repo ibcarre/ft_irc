@@ -49,6 +49,7 @@ class Channel {
 		void sendtoUsersnoOP(std::string, User &);
 		void modeCmd(std::vector<std::string>, User &);
 		bool isUsAdmin(User &);
+		bool isUsinChannel(User &);
 };
 
 // MODE - Change the channel’s mode:

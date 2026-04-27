@@ -6,14 +6,12 @@ Channel::Channel(std::string &aname, std::string &password, User &user) {
 	else
 		isPassProtected = false;
 	Channel::name = aname;
-	nb = 1;
+	nb = 0;
 	user_limit = INT_MAX;
 	addUser(user, true);
-	sendtoUsers(MSG_JOINED(aname, user.getNick(), user.getUsername()));
 	std::cout << "CHANNEL'S PASSWORD IS " <<  key << std::endl;
 	OperCanChangeTopic = false;
 	invOnly = false;
-	mode = "+";
 }
 
 Channel::~Channel() {}
@@ -24,6 +22,7 @@ int Channel::addUser(User&user, bool admin) {
 		return (-1);
 	}
 	if (nb == 0) {
+		std::cout << "EMPTY CHANNEL" << std::endl;
 		admin = true;
 		topic = "";
 	}
@@ -32,20 +31,25 @@ int Channel::addUser(User&user, bool admin) {
 		if (&user == (it->user))
 			return (1);
 	}
-	if (!topic.empty()) {
-		answerto(RPL_TOPIC(user.getNick(), name, topic), user.getFd());
-	}
-	sendtoUsers(MSG_JOINED(name, user.getNick(), user.getUsername()));
 	users.push_back(s_user(user, admin));
-	std::string nameReply = ":" + HOST + " 353 " + user.getNick() + " = #" + name + " :";
+	sendtoUsers(MSG_JOINED(name, user.getNick(), user.getUsername()));
+	std::string nameReply = ":" + SERVER + " 353 " + user.getNick() + " = #" + name + " :";
 	for (size_t i = 0; i < users.size(); i++) {
 		if (users[i].isAdmin)
 			nameReply += "@";
-		nameReply += users[i].user->getNick() + " ";
+		nameReply += users[i].user->getNick();
+		if (i != users.size() - 1)
+			nameReply += ' ';
 	}
 	nameReply += CRLF;
 	answerto(nameReply, user.getFd());
 	answerto(RPL_ENDOFNAMES(user.getNick(), name), user.getFd());
+	if (!topic.empty()) {
+		answerto(RPL_TOPIC(user.getNick(), name, topic), user.getFd());
+	}
+	else {
+		answerto(RPL_NOTOPIC(user.getNick(), name, topic), user.getFd());
+	}
 	return (1);
 }
 
@@ -56,17 +60,20 @@ void Channel::removeUser(User& user) {
 	std::cout << it->user->getFd() << std::endl;
 	for (size_t i = 0; i < users.size(); i++) {
 		if (users[i].user->getFd() == user.getFd()) { //it->user->getFd()
+			bool admin = users[i].isAdmin;
 			users.erase(users.begin() + i);
 			nb--;
-			if (!users[i].isAdmin)
+			if (!admin || oper) {
+				if (nb == 0)
+					invOnly = false;
 				return ;
-			if (oper)
-				break;
+			}
 		}
 		else if (users[i].isAdmin)
 			oper = true;
 	}
-	if (!oper) {
+	if (!oper && nb > 0) {
+		std::cout << users.begin()->user->getNick() << " Is now chan operator" << std::endl;
 		users.begin()->isAdmin = true;
 	}
 }
@@ -154,8 +161,15 @@ bool Channel::isUsAdmin(User &u) {
 	return (false);
 }
 
+bool Channel::isUsinChannel(User &u) {
+	for (size_t i = 0; i < users.size(); i++) {
+		if (u.getNick() == users[i].user->getNick()) {
+			return (true);
+		}
+	}
+	return (false);
+}
 
-// -bl+i
 
 void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 	std::cout << mode[0] << std::endl;
@@ -174,7 +188,7 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 		if (mode[0][i] == '+')
 		{
 			i++;
-			while(mode[0][i] != '-' && i < mode[0].size()) {
+			while(i < mode[0].size() && mode[0][i] != '-') {
 				plus.push_back(mode[0][i]);
 				if (mode[0][i] != 'l' && mode[0][i] != 'i' && mode[0][i] != 't' && mode[0][i] != 'k' && mode[0][i] != 'o') {
 					answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
@@ -186,7 +200,7 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 		else if (mode[0][i] == '-')
 		{
 			i++;
-			while(mode[0][i] != '+' && i < mode[0].size()) {
+			while(i < mode[0].size() && mode[0][i] != '+') {
 				minus.push_back(mode[0][i]);
 				if (mode[0][i] != 'l' && mode[0][i] != 'i' && mode[0][i] != 't' && mode[0][i] != 'k' && mode[0][i] != 'o') {
 					answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
@@ -201,12 +215,23 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 	}
 	if (minus.size() == 0 && plus.size() == 0) {
 		if (mode[0].length() == 1 && mode[0][0] == 'b') {
-			std::string msg = HOST + " #" + name + " :End of channel ban list" + CRLF;
+			std::string msg = ":" + SERVER + " 368 " + u.getNick() + " #" + name + " :End of channel ban list" + CRLF;
 			answerto(msg, u.getFd());
 			return;
-		}
-		answerto(ERR_NEEDMOREPARAMS("MODE"),u.getFd());
+		}		bool isUsinChannel(User &);
+
+		answerto(ERR_NEEDMOREPARAMS("MODE", u.getNick()),u.getFd());
 		return ;
+	}
+	if (!u.oper) {
+		for (size_t i = 0; i < users.size(); i++) {
+			if (users[i].user->getFd() == u.getFd()) {
+				if (!users[i].isAdmin) {
+					answerto(ERR_CHANOPRIVSNEEDED(name, u.getNick()), u.getFd());
+					return;
+				}
+			}
+		}
 	}
 	mode.erase(mode.begin());
 	for (size_t i = 0; i < plus.size(); i++) {
@@ -236,33 +261,40 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 }
 
 void Channel::modeTopic(char c, User &u) {
-	if (!u.oper) {
-		for (size_t i = 0; i < users.size(); i++) {
-			if (users[i].user->getFd() == u.getFd()) {
-				if (!users[i].isAdmin) {
-					answerto(ERR_CHANOPRIVSNEEDED(name), u.getFd());
-					return;
-				}
-			}
-		}
-	}
+	std::string msg = ":" + u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
 	if (c == '+') {
 		if (mode.find("t") == std::string::npos)
 			mode += "t";
 		OperCanChangeTopic = true;
-		std::string msg = "MODE #" + name + " +t           ; Only opers can change the channel topic" + CRLF;
+		msg += "MODE #" + name + " +t           ; Only opers can change the channel topic" + CRLF;
 		answerto(msg, u.getFd());
 	}
 	else {
 		if (size_t i = mode.find("t") != std::string::npos)
 			mode.erase(i, 1);
 		OperCanChangeTopic = false;
-		std::string msg = "MODE #" + name + " -t           ; Everyone can change the channel topic" + CRLF;
+		msg += "MODE #" + name + " -t           ; Everyone can change the channel topic" + CRLF;
 		answerto(msg, u.getFd());
 	}
 }
 
-void Channel::modeInv(char, User &) {}
+void Channel::modeInv(char c, User &u) {
+	std::string msg = ":" + u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
+	if (c == '+') {
+		invOnly = true;
+		if (mode.find("i") == std::string::npos)
+			mode += "i";
+		msg += "MODE #" + name + " +i           ; This channel is now Inv only" + CRLF;
+		answerto(msg, u.getFd());
+	}
+	else {
+		invOnly = false;
+		if (size_t i = mode.find("i") != std::string::npos)
+			mode.erase(i, 1);
+		msg += "MODE #" + name + " -i           ; This channel is not Inv only" + CRLF;
+		answerto(msg, u.getFd());
+	}
+}
 void Channel::modeLimit(char, User &) {}
 void Channel::modeKey(char, User &) {}
 void Channel::modeOp(char, std::vector<std::string>, User &) {}
@@ -292,7 +324,7 @@ void Channel::setTopic(std::vector<std::string> s, User &u) {
 		topic += s[i];
 		topic += " ";
 	}
-	std::string msg = u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
+	std::string msg = ":" + u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
 	msg += "TOPIC #" + name + " :" + topic + "       ; Channel " + name + " got a new topic" + CRLF;
 	sendtoUsers(msg);
 }

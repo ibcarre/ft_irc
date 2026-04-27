@@ -4,21 +4,21 @@
 
 #define HOST std::string("localhost")
 
-#define CRLF "\r\n"
+#define CRLF std::string("\r\n")
 
-#define ERR_PASSWDMISMATCH std::string(":") + SERVER + " : 464 Wrong password" + CRLF
+#define ERR_PASSWDMISMATCH std::string(":") + SERVER + " 464 * :464 Wrong password" + CRLF
 
-#define ERR_NOTREGISTERED std::string(":") + SERVER + " : 451 Not registered" + CRLF
+#define ERR_NOTREGISTERED std::string(":") + SERVER + " 451 * :Not registered" + CRLF
 
-#define ERR_ALREADYREGISTERED std::string(":") + SERVER + " : 462 Already Registered" + CRLF
+#define ERR_ALREADYREGISTERED std::string(":") + SERVER + " 462 * :Already Registered" + CRLF
 
-#define ERR_NEEDMOREPARAMS(cmd) std::string(":") + SERVER + " : " + cmd + " 461 Need more params" + CRLF
+#define ERR_NEEDMOREPARAMS(cmd, nick) std::string(":") + SERVER + " 461 " + nick + " " + cmd + " :Need more params" + CRLF
 
-#define ERR_NONICKNAMEGIVEN std::string(":") + SERVER + " : " + "431 No nickname" + CRLF
+#define ERR_NONICKNAMEGIVEN std::string(":") + SERVER + " 431 * :No nickname" + CRLF
 
-#define ERR_ERRONEUSNICKNAME std::string(":") + SERVER + " : " + "432 Invalid nickname" + CRLF
+#define ERR_ERRONEUSNICKNAME std::string(":") + SERVER + " 432 * :Invalid nickname" + CRLF
 
-#define ERR_NICKNAMEINUSE(nick) std::string(":") + SERVER + " : " + "433 " + nick + " Nickname in use" + CRLF
+#define ERR_NICKNAMEINUSE(nick) std::string(":") + SERVER + " 433 * " + nick + " :Nickname in use" + CRLF
 
 #define RPL_WELCOME(nick, username) ":" + SERVER + " 001 " + nick + " :Bienvenue sur le serveur IRC42, " + nick + "!" + username + "@" + HOST + CRLF
 
@@ -40,30 +40,30 @@
 
 #define ERR_NOSUCHNICK(nick) SERVER + " " + nick + " :No such Nickname" + CRLF
 
-#define ERR_BADCHANNELKEY(channel) SERVER + " #" + channel + " :Wrong key. Can't Join Channel" + CRLF
+#define ERR_BADCHANNELKEY(channel) ":" + SERVER + " 475 * #" + channel + " :Wrong key. Can't Join Channel (+k)" + CRLF
 
-#define MSG_JOINED(channel, nick, username) ":" + nick + "!" + username + "@" + SERVER + " JOIN :#" + channel + CRLF
+#define MSG_JOINED(channel, nick, username) ":" + nick + "!" + username + "@" + HOST + " JOIN #" + channel + " * :" + username + CRLF
 
 #define RPL_ENDOFNAMES(nick, channel) ":" + SERVER + " 366 " + nick + " #" + channel + " :End of Names LIST" + CRLF
 
-#define ERR_INVITEONLYCHAN(channel) SERVER + " #" + channel + " :Channel is invite only" + CRLF
+#define ERR_INVITEONLYCHAN(channel) ":" + SERVER + " 473 * #" + channel + " :Channel is invite only (+i)" + CRLF
 
-#define ERR_CHANNELISFULL(channel) SERVER + " #" + channel + " :Channel is full" + CRLF
+#define ERR_CHANNELISFULL(channel) ":" + SERVER + " 471 * #" + channel + " :Channel is full (+l)" + CRLF
 
-#define MSG_PARTED(channel, nick, username) ":" + nick + "!" + username + "@" + SERVER + " PART " + " #" + channel + "      ; " + nick + " has parted the channel " + channel +CRLF
+#define MSG_PARTED(channel, nick, username) ":" + nick + "!" + username + "@" + HOST + " PART " + " #" + channel +CRLF
 
-#define ERR_NOTEXTTOSEND HOST + " :No text to send" + CRLF
+#define ERR_NOTEXTTOSEND SERVER + " :No text to send" + CRLF
 
-#define ERR_NOSUCHCHANNEL(channel) SERVER + " #" + channel + " :No such Channel" + CRLF
+#define ERR_NOSUCHCHANNEL(channel) ":" + SERVER + " #" + channel + " :No such Channel" + CRLF
 
 #define ERR_UMODEUNKNOWNFLAG SERVER + " :Unknown MODE flag" + CRLF
 
-#define ERR_CHANOPRIVSNEEDED(channel) SERVER + " #" + channel + " :You're not channel operator" + CRLF
+#define ERR_CHANOPRIVSNEEDED(channel, nick) ":" + SERVER + " 482 " + nick + " #" + channel + " :You're not channel operator" + CRLF
 
-#define RPL_NOTOPIC(nick, username, channel) nick + "!" + username + "@" + HOST + " #" + channel + " :No topic is set" + CRLF
+#define RPL_NOTOPIC(nick, username, channel) ":" + SERVER + " 331 "+ nick + " #" + channel + " :No topic is set" + CRLF
 
-#define RPL_TOPIC(nick, channel, topic) ":" + HOST + " 332 "+ nick + " #" + channel + " :" + topic + CRLF
+#define RPL_TOPIC(nick, channel, topic) ":" + SERVER + " 332 "+ nick + " #" + channel + " :" + topic + CRLF
 
-#define RPL_WHOREPLY(nick, channel, uNameTarget, nNameTarget, rNameTarget) ":" + HOST + " 352 " + nick + " #" + channel + " " + uNameTarget + " " + HOST + " " + SERVER + " " + nNameTarget + " H :1 " + rNameTarget + CRLF
+#define RPL_WHOREPLY(nick, channel, uNameTarget, nNameTarget, rNameTarget) ":" + SERVER + " 352 " + nick + " #" + channel + " " + uNameTarget + " " + HOST + " " + SERVER + " " + nNameTarget + " H :1 " + rNameTarget + CRLF
 
-#define RPL_ENDOFWHO(channel) ":" + HOST + " #" + channel + " :End of WHO list" + CRLF
+#define RPL_ENDOFWHO(channel) ":" + SERVER + " 315 * #" + channel + " :End of WHO list" + CRLF
