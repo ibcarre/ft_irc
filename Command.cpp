@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/27 18:13:34 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/28 18:56:38 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,23 +76,9 @@ void Command::cmdNick() {
 		answer(ERR_NONICKNAMEGIVEN);
 		return ;
 	}
-	if (*(_params.begin()) == '#' || *(_params.begin()) == ':')
-	{
+	if (!checkValid(_params)) {
 		answer(ERR_ERRONEUSNICKNAME);
 		return ;
-	}
-	for (std::string::iterator it = _params.begin(); it != _params.end(); it++) {
-		if (!isprint(*it) || *it == ' ') {
-			answer(ERR_ERRONEUSNICKNAME);
-			return ;
-		}
-	}
-	for (std::deque<User>::iterator it = _server->getAllusers().begin(); it != _server->getAllusers().end() ; it++) {
-		if (_params == it->getNick())
-		{
-			answer(ERR_NICKNAMEINUSE(_params));
-			return ;
-		}
 	}
 	_user->setNick(_params);
 	if (!(_user->getUsername()).empty() && !_user->registered) {
@@ -138,7 +124,7 @@ void Command::cmdPing() {
 	answer(std::string("PONG :" + _params + CRLF));
 }
 
-void Command::cmdJoin() { //checke si nom valide alors BADCHANMASK
+void Command::cmdJoin() {
 	if (!_user->registered) {
 		answer(ERR_NOTREGISTERED);
 		return ;
@@ -178,10 +164,14 @@ void Command::cmdJoin() { //checke si nom valide alors BADCHANMASK
 			key = pwd[i];
 		}
 		if (!c) {
-			Channel newchan(chans[i], key, *_user);
-			_server->addChannel(newchan);
-			Channel *c = _server->findChannel(chans[i]);
-			_user->addChannel(*c);
+			if (!checkValid(chans[i]) || chans[i].length() > 50)
+				answer(ERR_BADCHANMASK(chans[i], _user->getNick()));
+			else {
+				Channel newchan(chans[i], key, *_user);
+				_server->addChannel(newchan);
+				Channel *c = _server->findChannel(chans[i]);
+				_user->addChannel(*c);
+			}
 		}
 		else if (c) {
 			if (c->invOnly) {
@@ -446,6 +436,7 @@ void	Command::mode() {
 		return ;
 	}
 	if (_params[0] != '#') {
+		answer(ERR_BADCHANMASK(_cmd, _user->getNick()));
 		return ;
 	}
 	_params.erase(0, 1);

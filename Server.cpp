@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/24 15:37:16 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/28 17:32:20 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -313,4 +313,15 @@ void Server::addChannel(Channel &chan) {
 	std::cout << "USER " << chan.getUser(0)->getNick() << " created " << chan.getName() << std::endl;
 	_channels.push_back(chan);
 	(_channels.begin())->getName();
+}
+
+bool	checkValid(std::string s) {
+	if (*(s.begin()) == '#' || *(s.begin()) == ':')
+		return false;
+	for (std::string::iterator it = s.begin(); it != s.end(); it++) {
+		if (!isprint(*it) || *it == ' ') {
+			return false;
+		}
+	}
+	return true;
 }

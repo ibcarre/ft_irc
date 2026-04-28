@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 03:58:02 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/24 14:23:31 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/28 13:40:45 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,5 +85,6 @@ public:
 };
 
 void	answerto(std::string, int);
+bool	checkValid(std::string);
 
 #endif

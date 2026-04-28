@@ -9,7 +9,7 @@ Channel::Channel(std::string &aname, std::string &password, User &user) {
 	nb = 0;
 	user_limit = INT_MAX;
 	addUser(user, true);
-	std::cout << "CHANNEL'S PASSWORD IS " <<  key << std::endl;
+	std::cout << "CHANNEL'S (" << name <<")PASSWORD IS " <<  key << std::endl;
 	OperCanChangeTopic = false;
 	invOnly = false;
 }
@@ -64,8 +64,11 @@ void Channel::removeUser(User& user) {
 			users.erase(users.begin() + i);
 			nb--;
 			if (!admin || oper) {
-				if (nb == 0)
+				if (nb == 0) {
 					invOnly = false;
+					setPassword("");
+					isPassProtected = false;
+				}
 				return ;
 			}
 		}
@@ -86,7 +89,7 @@ int Channel::setLimit(int limit) {
 }
 
 void Channel::setPassword(std::string password) {
-	password = password;
+	key = password;
 }
 
 User *Channel::getUser(int n) {
@@ -180,7 +183,7 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 		answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
 		return ;
 	}
-	if (mode.size() == 2 && mode[0].find("o") == std::string::npos) {
+	if (mode.size() == 2 && mode[0].find("o") == std::string::npos && mode[0].find("l") == std::string::npos) {
 		answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
 		return ;
 	}
@@ -200,7 +203,7 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 		else if (mode[0][i] == '-')
 		{
 			i++;
-			while(i < mode[0].size() && mode[0][i] != '+') {
+			while((i < mode[0].size()) && mode[0][i] != '+') {
 				minus.push_back(mode[0][i]);
 				if (mode[0][i] != 'l' && mode[0][i] != 'i' && mode[0][i] != 't' && mode[0][i] != 'k' && mode[0][i] != 'o') {
 					answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
@@ -218,8 +221,7 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 			std::string msg = ":" + SERVER + " 368 " + u.getNick() + " #" + name + " :End of channel ban list" + CRLF;
 			answerto(msg, u.getFd());
 			return;
-		}		bool isUsinChannel(User &);
-
+		}
 		answerto(ERR_NEEDMOREPARAMS("MODE", u.getNick()),u.getFd());
 		return ;
 	}
@@ -234,9 +236,10 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 		}
 	}
 	mode.erase(mode.begin());
+	int idx = 0;
 	for (size_t i = 0; i < plus.size(); i++) {
 		if (plus[i] == 'l')
-			modeLimit('+', u);
+			modeLimit('+', u, mode, ++idx);
 		else if (plus[i] == 'i')
 			modeInv('+', u);
 		else if (plus[i] == 't')
@@ -244,11 +247,11 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 		else if (plus[i] == 'k')
 			modeKey('+', u);
 		else if (plus[i] == 'o')
-			modeOp('+', mode, u);
+			modeOp('+', u, mode, ++idx);
 	}
 	for (size_t i = 0; i < minus.size(); i++) {
 		if (minus[i] == 'l')
-			modeLimit('-', u);
+			modeLimit('-', u, mode, idx);
 		else if (minus[i] == 'i')
 			modeInv('-', u);
 		else if (minus[i] == 't')
@@ -256,7 +259,7 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 		else if (minus[i] == 'k')
 			modeKey('-', u);
 		else if (minus[i] == 'o')
-			modeOp('-', mode, u);
+			modeOp('-', u, mode, ++idx);
 	}
 }
 
@@ -266,14 +269,15 @@ void Channel::modeTopic(char c, User &u) {
 		if (mode.find("t") == std::string::npos)
 			mode += "t";
 		OperCanChangeTopic = true;
-		msg += "MODE #" + name + " +t           ; Only opers can change the channel topic" + CRLF;
+		msg += "MODE #" + name + " +t           ; Only opers can now change the channel topic" + CRLF;
 		answerto(msg, u.getFd());
 	}
 	else {
-		if (size_t i = mode.find("t") != std::string::npos)
+		size_t i = mode.find("t");
+		if (i != std::string::npos) 
 			mode.erase(i, 1);
 		OperCanChangeTopic = false;
-		msg += "MODE #" + name + " -t           ; Everyone can change the channel topic" + CRLF;
+		msg += "MODE #" + name + " -t           ; Everyone can now change the channel topic" + CRLF;
 		answerto(msg, u.getFd());
 	}
 }
@@ -282,22 +286,61 @@ void Channel::modeInv(char c, User &u) {
 	std::string msg = ":" + u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
 	if (c == '+') {
 		invOnly = true;
-		if (mode.find("i") == std::string::npos)
+		if (mode.find("i") == std::string::npos) {
 			mode += "i";
+		}
 		msg += "MODE #" + name + " +i           ; This channel is now Inv only" + CRLF;
 		answerto(msg, u.getFd());
 	}
 	else {
 		invOnly = false;
-		if (size_t i = mode.find("i") != std::string::npos)
+		size_t i = mode.find("i");
+		if (i != std::string::npos)
 			mode.erase(i, 1);
-		msg += "MODE #" + name + " -i           ; This channel is not Inv only" + CRLF;
+		msg += "MODE #" + name + " -i           ; This channel is not Inv only (anymore)" + CRLF;
 		answerto(msg, u.getFd());
 	}
 }
-void Channel::modeLimit(char, User &) {}
+void Channel::modeLimit(char c, User &u, std::vector<std::string> &s, int i) {
+	std::string msg = ":" + u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
+	if (c == '+') {
+		if (static_cast<size_t>(i) > s.size()) {
+			answerto(ERR_NEEDMOREPARAMS("+l", u.getNick()), u.getFd());
+			return ;
+		}
+		if (s[i].size() > 3) {
+			answerto(ERR_UNKNOWNERROR(u.getNick(), "Limit too big"), u.getFd());
+			return ;
+		}
+		for (size_t j = 0; j < s[i].size() ; j++) {
+			if (!isdigit(s[i][j])) {
+				answerto(ERR_UNKNOWNERROR(u.getNick(), "Limit should be a number"), u.getFd());
+				return ;
+			}
+		}
+		if (mode.find("l") == std::string::npos)
+			mode += "l";
+		user_limit = atoi(s[i].c_str());
+		msg += "MODE #" + name + " +l           ; This channel is now limited to " + s[i] + " users" + CRLF;
+	}
+	else {
+		size_t j = mode.find("l");
+		if (j != std::string::npos) {
+			mode.erase(j, 1);
+		}
+		msg += "MODE #" + name + " -l           ; This channel is not limited" + CRLF;
+		user_limit = INT_MAX;
+	}
+	answerto(msg, u.getFd());
+}
+
 void Channel::modeKey(char, User &) {}
-void Channel::modeOp(char, std::vector<std::string>, User &) {}
+void Channel::modeOp(char c, User &u, std::vector<std::string> &s, int i) {
+	(void) c;
+	(void)u;
+	(void)i;
+	(void)s;
+}
 
 void Channel::setTopic(std::vector<std::string> s, User &u) {
 	// check que s est pas vide et : si que 2 petits points alors clear

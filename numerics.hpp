@@ -67,3 +67,7 @@
 #define RPL_WHOREPLY(nick, channel, uNameTarget, nNameTarget, rNameTarget) ":" + SERVER + " 352 " + nick + " #" + channel + " " + uNameTarget + " " + HOST + " " + SERVER + " " + nNameTarget + " H :1 " + rNameTarget + CRLF
 
 #define RPL_ENDOFWHO(channel) ":" + SERVER + " 315 * #" + channel + " :End of WHO list" + CRLF
+
+#define ERR_BADCHANMASK(channel, nick) ":" + SERVER + " 476 " + nick + " #" + channel + " :Bad Channel Mask" + CRLF
+
+#define ERR_UNKNOWNERROR(nick, error) ":" + SERVER + " 400 " + nick + " :" + error + CRLF
