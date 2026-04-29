@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/29 11:07:46 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/29 12:28:45 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -250,7 +250,7 @@ void	Command::oper() {
 	std::string password = _params.substr(first + 1);
 	password.substr(0, password.size() - 2);
 	if (name == OPERNAME && password == OPERPASS) {
-		answer(SERVER + " :You are now an IRC operator" + CRLF);
+		answer(RPL_YOUREOPER(_user->getNick()));
 		_user->oper = true;
 	}
 	else {
@@ -436,7 +436,6 @@ void	Command::mode() {
 		return ;
 	}
 	if (_params[0] != '#') {
-		answer(ERR_BADCHANMASK(_params, _user->getNick()));
 		return ;
 	}
 	_params.erase(0, 1);

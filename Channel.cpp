@@ -333,7 +333,7 @@ void Channel::modeLimit(char c, User &u, std::vector<std::string> &s, int i) {
 void Channel::modeKey(char c, User &u, std::vector<std::string> &s, int i) {
 	std::string msg = ":" + u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
 	if (c == '+') {
-	if (static_cast<size_t>(i) > s.size()) {
+		if (static_cast<size_t>(i) > s.size()) {
 			answerto(ERR_NEEDMOREPARAMS("+l", u.getNick()), u.getFd());
 			return ;
 		}
@@ -359,10 +359,33 @@ void Channel::modeKey(char c, User &u, std::vector<std::string> &s, int i) {
 	answerto(msg, u.getFd());
 }
 void Channel::modeOp(char c, User &u, std::vector<std::string> &s, int i) {
-	(void) c;
-	(void)u;
-	(void)i;
-	(void)s;
+	std::string msg = ":" + u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
+	if (static_cast<size_t>(i) > s.size()) {
+		answerto(ERR_NEEDMOREPARAMS("+l", u.getNick()), u.getFd());
+		return ;
+	}
+	std::string user = s[i];
+	size_t j;
+	for (j = 0; j < users.size(); j++) {
+		if (users[j].user->getNick() == user)
+			break;
+	}
+	if (j == users.size()) {
+		answerto(ERR_USERNOTINCHANNEL(name, u.getNick()), u.getFd());
+		return ;
+	}
+	if (c == '+') {
+		std::cout << "qdqsqsd";
+		std::cout << j << std::endl;
+		users[j].isAdmin = true;
+		msg += "MODE #" + name + " +o           ; Added an operator" + CRLF;
+		answerto(RPL_YOUREOPER(users[j].user->getNick()), users[j].user->getFd());
+	}
+	else {
+		users[j].isAdmin = false;
+		msg += "MODE #" + name + " -o           ; Removed an operator" + CRLF;
+	}
+	answerto(msg, u.getFd());
 }
 
 void Channel::setTopic(std::vector<std::string> s, User &u) {

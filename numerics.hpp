@@ -60,6 +60,8 @@
 
 #define ERR_CHANOPRIVSNEEDED(channel, nick) ":" + SERVER + " 482 " + nick + " #" + channel + " :You're not channel operator" + CRLF
 
+#define ERR_USERNOTINCHANNEL(channel, nick) ":" + SERVER + " 441 " + nick + " #" + channel + " :They're not in the channel" + CRLF
+
 #define RPL_NOTOPIC(nick, channel) ":" + SERVER + " 331 "+ nick + " #" + channel + " :No topic is set" + CRLF
 
 #define RPL_TOPIC(nick, channel, topic) ":" + SERVER + " 332 "+ nick + " #" + channel + " :" + topic + CRLF
@@ -71,3 +73,5 @@
 #define ERR_BADCHANMASK(channel, nick) ":" + SERVER + " 476 " + nick + " #" + channel + " :Bad Channel Mask" + CRLF
 
 #define ERR_UNKNOWNERROR(nick, error) ":" + SERVER + " 400 " + nick + " :" + error + CRLF
+
+#define RPL_YOUREOPER(nick) ":" + SERVER + " 381 " + nick + " :You are now an operator" + CRLF
