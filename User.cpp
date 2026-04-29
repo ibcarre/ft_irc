@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:35:35 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/27 18:21:17 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/29 16:33:03 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,17 @@ void User::addChannel(Channel &chan) {
 			return ;
 	}
 	_channels.push_back(&chan);
+}
+
+void User::removeChannel(Channel &chan) {
+	std::cout << nick << " got " << _channels.size() << " channels" << std::endl;
+	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end() ; it++) {
+		if (&chan == (*it)) {
+			_channels.erase(it);
+			std::cout << nick << " NOW got " << _channels.size() << " channels" << std::endl;
+			return ;
+		}
+	}
 }
 
 void User::clearChannels() {

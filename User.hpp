@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 05:09:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/21 16:04:44 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/29 16:30:16 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,7 @@ class User
 		std::vector<Channel *> getChannels() const;
 		void clearChannels();
 		void addChannel(Channel &);
+		void removeChannel(Channel &);
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/28 17:32:20 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/29 15:56:47 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -319,7 +319,7 @@ bool	checkValid(std::string s) {
 	if (*(s.begin()) == '#' || *(s.begin()) == ':')
 		return false;
 	for (std::string::iterator it = s.begin(); it != s.end(); it++) {
-		if (!isprint(*it) || *it == ' ') {
+		if (!isprint(*it) || *it == ' ' || *it == ',' || *it == '*' || *it == '?' || *it == '!' || *it == '@' || *it == '.') {
 			return false;
 		}
 	}

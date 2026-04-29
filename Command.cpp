@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/29 12:28:45 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/29 18:25:01 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,11 +32,11 @@ void Command::processCmd() {
 	std::cout << "COMMAND " << _cmd << "\n";
 	std::cout << "PARAMS " << _params << "\n";
 	size_t i;
-	const int nb = 14;
+	const int nb = 16;
 	typedef void    (Command::*fptr) (void);
     fptr    func[nb] = {&Command::cmdPass, &Command::cmdNick, &Command::cmdUser, &Command::cmdPing, &Command::cmdJoin, &Command::motd, &Command::oper, &Command::quit, &Command::kill, &Command::restart, 
-		&Command::cmdPrivMsg, &Command::mode, &Command::topic, &Command::WHO};
-	std::string arr[nb] = {"PASS", "NICK", "USER", "PING", "JOIN", "MOTD", "OPER", "QUIT", "KILL", "RESTART", "PRIVMSG", "MODE", "TOPIC", "WHO"};
+		&Command::cmdPrivMsg, &Command::mode, &Command::topic, &Command::WHO, &Command::kick, &Command::invite};
+	std::string arr[nb] = {"PASS", "NICK", "USER", "PING", "JOIN", "MOTD", "OPER", "QUIT", "KILL", "RESTART", "PRIVMSG", "MODE", "TOPIC", "WHO", "KICK", "INVITE"};
 	if (_cmd == "CAP") {
 		std::string msg = ":ircserver CAP * LS" + CRLF;
 		answer(msg);
@@ -79,6 +79,13 @@ void Command::cmdNick() {
 	if (!checkValid(_params)) {
 		answer(ERR_ERRONEUSNICKNAME);
 		return ;
+	}
+	for (std::deque<User>::iterator it = _server->getAllusers().begin(); it != _server->getAllusers().end() ; it++) {
+		if (_params == it->getNick())
+		{
+			answer(ERR_NICKNAMEINUSE(_params));
+			return ;
+		}
 	}
 	_user->setNick(_params);
 	if (!(_user->getUsername()).empty() && !_user->registered) {
@@ -138,7 +145,8 @@ void Command::cmdJoin() {
 		_user->clearChannels();
 		return ;
 	}
-	std::vector<std::string> params = splitParams(' ');
+	std::vector<std::string> params = splitParams(',', _params);
+	params = splitParams(' ', _params);
 	std::vector<std::string> chans;
 	std::vector<std::string> pwd;
 	for (std::vector<std::string>::iterator it = params.begin(); it != params.end() ; it++) {
@@ -289,7 +297,7 @@ void	Command::kill() {
 		answer(ERR_NOPRIVILEGES);
 		return ;
 	}
-	std::vector<std::string> params = splitParams(' ');
+	std::vector<std::string> params = splitParams(' ', _params);
 	if (params.size() < 2) {
 		answer(ERR_NEEDMOREPARAMS(_cmd, _user->getNick()));
 		return ;
@@ -317,16 +325,17 @@ void	Command::kill() {
 // chan operator MODE +b +l +i +v +m TOPIC KICK INVITE
 // serveur operator OPER KILL ET RESTART
 
-std::vector<std::string>	Command::splitParams(char c) {
-	size_t i = _params.find(c);
+std::vector<std::string>	Command::splitParams(char c, std::string &s) {
+	size_t i = s.find(c);
 	size_t i2 = 0;
 	std::vector<std::string> list;
 	while (i != std::string::npos) {
-		list.push_back(_params.substr(i2, i - i2));
+		s[i] = ' ';
+		list.push_back(s.substr(i2, i - i2));
 		i2 = i+1;
-		i = _params.find(c ,i2);
+		i = s.find(c ,i2);
 	}
-	list.push_back(_params.substr(i2, i-i2));
+	list.push_back(s.substr(i2, i-i2));
 	return (list);
 }
 
@@ -370,7 +379,7 @@ void Command::cmdPrivMsg() {
 		answer(ERR_NOTREGISTERED);
 		return ;
 	}
-	std::vector<std::string> par = splitParams(' ');
+	std::vector<std::string> par = splitParams(' ', _params);
 	if (par.empty()) {
 		answer(ERR_NEEDMOREPARAMS("PRIVMSG", _user->getNick()));
 		return ;
@@ -407,7 +416,7 @@ void Command::cmdPrivMsg() {
 			break;
 	}
 	if (i == channels.size()) {
-		answer(ERR_NOSUCHCHANNEL(target));
+		answer(ERR_NOSUCHCHANNEL(target, _user->getNick()));
 		return ;
 	}
 	Channel *c = channels[i];
@@ -444,7 +453,7 @@ void	Command::mode() {
 		return ;
 	}
 	const std::vector<Channel *> &channels = _user->getChannels();
-	std::vector<std::string> par = splitParams(' ');
+	std::vector<std::string> par = splitParams(' ', _params);
 	std::string target = par[0];
 	Channel *c = NULL;
 	for (size_t i = 0; i < channels.size(); i++) {
@@ -454,7 +463,7 @@ void	Command::mode() {
 		}
 	}
 	if (!c) {
-		answer(ERR_NOSUCHCHANNEL(target));
+		answer(ERR_NOSUCHCHANNEL(target, _user->getNick()));
 		return ;
 	}
 	par.erase(par.begin());
@@ -471,7 +480,7 @@ void	Command::topic() {
 		answer(ERR_NOTREGISTERED);
 		return ;
 	}
-	std::vector<std::string> par = splitParams(' ');
+	std::vector<std::string> par = splitParams(' ', _params);
 	if (par.empty()) {
 		answer(ERR_NEEDMOREPARAMS(_cmd, _user->getNick()));
 		return ;
@@ -495,7 +504,7 @@ void	Command::topic() {
 		}
 	}
 	if (!c) {
-		answer(ERR_NOSUCHCHANNEL(target));
+		answer(ERR_NOSUCHCHANNEL(target, _user->getNick()));
 		return ;
 	}
 	par.erase(par.begin());
@@ -545,7 +554,7 @@ void	Command::WHO() {
 		}
 	}
 	if (i == channels.size()) {
-		answer(ERR_NOSUCHCHANNEL(_params));
+		answer(ERR_NOSUCHCHANNEL(_params, _user->getNick()));
 		return ;
 	}
 	const Channel &c = channels[i];
@@ -558,8 +567,117 @@ void	Command::WHO() {
 	answer(RPL_ENDOFWHO(c.getName()));
 }
 
+void	Command::kick() {
+	if (!_user->registered) {
+		answer(ERR_NOTREGISTERED);
+		return ;
+	}
+	if (_params.empty()) {
+		answer(ERR_NEEDMOREPARAMS(_cmd, _user->getNick()));
+		return ;
+	}
+	if (_params[0] != '#') {
+		answer(ERR_BADCHANMASK("", _user->getNick()));
+		return ;
+	}
+	_params.erase(0,1);
+	std::vector<std::string> split = splitParams(',', _params);
+	split = splitParams(' ', _params);
+	if (split.size() < 2) {
+		answer(ERR_NEEDMOREPARAMS(_cmd, _user->getNick()));
+		return ;
+	}
+	bool s_oper = _user->oper;
+	for (size_t i = 0; i < split.size(); i++) {
+		if (split[i][0] == '#') {
+			answer(ERR_UNKNOWNERROR(_user->getNick(), "Can only kick from one channel at once"));
+			return ;
+		}
+	}
+	Channel *c = _server->findChannel(split[0]);
+	if (!c) {
+		answer(ERR_NOSUCHCHANNEL(split[0], _user->getNick()));
+		return;
+	}
+	bool isAdmin = c->isUsAdmin(*_user);
+	if (!isAdmin && s_oper) {
+		answer(ERR_NOPRIVILEGES);
+		return ;
+	}
+	std::string msg;
+	if (_params.find(":") != std::string::npos) {
+		msg = _params.substr(_params.find(":") + 1);
+	}
+	std::string m = ":" + _user->getNick() + "!" + _user->getUsername() + "@" + SERVER + " KICK #" + split[0] + " ";
+	for (size_t i = 1; i < split.size(); i++) {
+		if (split[i][0] == ':')
+			break;
+		bool isUser;
+		User u = _server->getUser(split[i], isUser);
+		if (!isUser) {
+			answer(ERR_NOSUCHNICK(split[i]));
+			continue;
+		}
+		if (!c->isUsinChannel(u)) {
+			answer(ERR_USERNOTINCHANNEL(_user->getNick(), split[0]));
+			continue ;
+		}
+		c->removeUser(u);
+		u.removeChannel(*c);
+		if (msg.empty()) {
+			m += split[i] + "                ; KICK message from " + _user->getNick() + " to remove " + split[i] + " from " + split[0] + CRLF;
+		}
+		else {
+			m += split[i] + "                ; KICK message from " + _user->getNick() + " to remove " + split[i] + " from " + split[0] + " the reason : "+ msg  + CRLF;
+		}
+		answer(m);
+		answerto(m, u.getFd());
+	}
+}
 
-//< JOIN #test
-//> :ircserv 332 casomarr #test :
-
-//> :ib!~ibtihal@127.0.0.1 JOIN :#test
+void	Command::invite() {
+	if (_params.empty()) {
+		answer(ERR_NEEDMOREPARAMS(_cmd, _user->getNick()));
+		return;
+	}
+	std::vector<std::string> par = splitParams(' ', _params);
+	if (par.size() != 2) {
+		answer(ERR_NEEDMOREPARAMS(_cmd, _user->getNick()));
+		return ;
+	}
+	if (par[1][0] != '#') {
+		answer(ERR_UNKNOWNERROR(_user->getNick(), "Need a #channel"));
+		return ;
+	}
+	std::string user = par[0];
+	std::string channel = par[1];
+	channel.erase(0,1);
+	Channel *c = _server->findChannel(channel);
+	bool isUser;
+	User &u = _server->getUser(user, isUser);
+	if (!isUser) {
+		answer(ERR_NOSUCHNICK(user));
+		return ;
+	}
+	if (!c) {
+		answer(ERR_NOSUCHCHANNEL(channel, _user->getNick()));
+		return ;
+	}
+	if (!c->isUsinChannel(*_user)) {
+		answer(ERR_NOTONCHANNEL(_user->getNick(), channel));
+		return ;
+	}
+	if (c->invOnly && !c->isUsAdmin(*_user)) {
+		answer(ERR_CHANOPRIVSNEEDED(channel, _user->getNick()));
+		return ;
+	}
+	if (c->isUsinChannel(u)) {
+		answer(ERR_USERONCHANNEL(_user->getNick(), channel));
+		return;
+	}
+	answer(RPL_INVITING(_user->getNick(), channel));
+	std::string msg = ":" + _user->getNick() + "!" + _user->getUsername() + "@" + HOST + " INVITE " + user + " #" + channel + "     ; " + _user->getNick() + " invited " + user + " to #" + channel + CRLF;
+	answerto(msg, u.getFd());
+	u.addChannel(*c);
+	c->addUser(u, false);
+}

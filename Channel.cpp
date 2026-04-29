@@ -375,8 +375,6 @@ void Channel::modeOp(char c, User &u, std::vector<std::string> &s, int i) {
 		return ;
 	}
 	if (c == '+') {
-		std::cout << "qdqsqsd";
-		std::cout << j << std::endl;
 		users[j].isAdmin = true;
 		msg += "MODE #" + name + " +o           ; Added an operator" + CRLF;
 		answerto(RPL_YOUREOPER(users[j].user->getNick()), users[j].user->getFd());

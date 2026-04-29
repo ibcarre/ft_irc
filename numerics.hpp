@@ -36,9 +36,9 @@
 
 #define QUITMSGNOPARAM(nick, username) ":" + nick + "!" + username + "@" + HOST + " QUIT " + ":Quit: See you later " + nick + "\n" + nick + " is exiting the network" + CRLF
 
-#define ERR_NOPRIVILEGES SERVER + " :Permission Denied- You're not an IRC operator" + CRLF
+#define ERR_NOPRIVILEGES ":" SERVER + "481 :Permission Denied- You're not an IRC operator" + CRLF
 
-#define ERR_NOSUCHNICK(nick) SERVER + " " + nick + " :No such Nickname" + CRLF
+#define ERR_NOSUCHNICK(nick) ":" + SERVER + " 401 " + nick + " :No such Nickname" + CRLF
 
 #define ERR_BADCHANNELKEY(channel) ":" + SERVER + " 475 * #" + channel + " :Wrong key. Can't Join Channel (+k)" + CRLF
 
@@ -54,7 +54,7 @@
 
 #define ERR_NOTEXTTOSEND SERVER + " :No text to send" + CRLF
 
-#define ERR_NOSUCHCHANNEL(channel) ":" + SERVER + " #" + channel + " :No such Channel" + CRLF
+#define ERR_NOSUCHCHANNEL(channel, nick) ":" + SERVER + " 403 " + nick + " #" + channel + " :No such Channel" + CRLF
 
 #define ERR_UMODEUNKNOWNFLAG SERVER + " :Unknown MODE flag" + CRLF
 
@@ -75,3 +75,9 @@
 #define ERR_UNKNOWNERROR(nick, error) ":" + SERVER + " 400 " + nick + " :" + error + CRLF
 
 #define RPL_YOUREOPER(nick) ":" + SERVER + " 381 " + nick + " :You are now an operator" + CRLF
+
+#define ERR_NOTONCHANNEL(nick, channel) ":" + SERVER + " 381 " + nick + " #" + channel + " :You're not in the channel" + CRLF
+
+#define ERR_USERONCHANNEL(nick, channel) ":" + SERVER + " 443 " + nick + " #" + channel + " :Already on channel" + CRLF
+
+#define RPL_INVITING(nick, channel) ":" + SERVER + " 341 " + nick + " #" + channel + " :Invited to channel" + CRLF

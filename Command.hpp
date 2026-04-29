@@ -6,7 +6,7 @@
 /*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:19:13 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/24 14:28:42 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/04/29 16:01:23 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@ class Command
 		void	mode();
 		void	restart();
 		void	kill();
+		void	kick();
+		void	invite();
 		void	quit();
 		void	motd();
 		void	answer(std::string);
@@ -45,7 +47,7 @@ class Command
 		void	authenticate();
 		void	WHO();
 		std::string handleMsg(std::vector<std::string>, std::string);
-		std::vector<std::string> splitParams(char c);
+		std::vector<std::string> splitParams(char, std::string &);
 	public:
 		void processCmd();
 		Command(std::string &cmd, std::string &params, User &u, Server &s);
