@@ -25,7 +25,7 @@ class Channel {
 		void modeTopic(char, User &);
 		void modeInv(char, User &);
 		void modeLimit(char, User &, std::vector<std::string>&, int);
-		void modeKey(char, User &);
+		void modeKey(char, User &, std::vector<std::string>&, int);
 		void modeOp(char, User &, std::vector<std::string>&, int);
 	public:
 		std::string mode;

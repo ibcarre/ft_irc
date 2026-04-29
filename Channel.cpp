@@ -17,6 +17,7 @@ Channel::Channel(std::string &aname, std::string &password, User &user) {
 Channel::~Channel() {}
 
 int Channel::addUser(User&user, bool admin) {
+	std::cout << nb << " users in chan" << std::endl;
 	if (nb >= user_limit) {
 		answerto(ERR_CHANNELISFULL(name), user.getFd());
 		return (-1);
@@ -26,11 +27,15 @@ int Channel::addUser(User&user, bool admin) {
 		admin = true;
 		topic = "";
 	}
-	nb++;
 	for (std::vector<s_user>::iterator it = users.begin() ; it != users.end(); it ++) {
-		if (&user == (it->user))
+		if (&user == (it->user)) {
+			if (users.size() == 1) {
+				it->isAdmin = true;
+			}
 			return (1);
+		}
 	}
+	nb++;
 	users.push_back(s_user(user, admin));
 	sendtoUsers(MSG_JOINED(name, user.getNick(), user.getUsername()));
 	std::string nameReply = ":" + SERVER + " 353 " + user.getNick() + " = #" + name + " :";
@@ -48,7 +53,7 @@ int Channel::addUser(User&user, bool admin) {
 		answerto(RPL_TOPIC(user.getNick(), name, topic), user.getFd());
 	}
 	else {
-		answerto(RPL_NOTOPIC(user.getNick(), name, topic), user.getFd());
+		answerto(RPL_NOTOPIC(user.getNick(), name), user.getFd());
 	}
 	return (1);
 }
@@ -63,14 +68,13 @@ void Channel::removeUser(User& user) {
 			bool admin = users[i].isAdmin;
 			users.erase(users.begin() + i);
 			nb--;
-			if (!admin || oper) {
-				if (nb == 0) {
-					invOnly = false;
-					setPassword("");
-					isPassProtected = false;
-				}
-				return ;
+			if (nb == 0) {
+				invOnly = false;
+				setPassword("");
+				isPassProtected = false;
 			}
+			if (!admin || oper) 
+				return ;
 		}
 		else if (users[i].isAdmin)
 			oper = true;
@@ -179,14 +183,6 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 	std::vector<char> minus;
 	std::vector<char> plus;
 	std::vector<std::string> args;
-	if (mode.size() > 2) {
-		answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
-		return ;
-	}
-	if (mode.size() == 2 && mode[0].find("o") == std::string::npos && mode[0].find("l") == std::string::npos) {
-		answerto(ERR_UMODEUNKNOWNFLAG, u.getFd());
-		return ;
-	}
 	for (size_t i = 0; i < mode[0].size(); i++) {
 		if (mode[0][i] == '+')
 		{
@@ -239,15 +235,15 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 	int idx = 0;
 	for (size_t i = 0; i < plus.size(); i++) {
 		if (plus[i] == 'l')
-			modeLimit('+', u, mode, ++idx);
+			modeLimit('+', u, mode, idx++);
 		else if (plus[i] == 'i')
 			modeInv('+', u);
 		else if (plus[i] == 't')
 			modeTopic('+', u);
 		else if (plus[i] == 'k')
-			modeKey('+', u);
+			modeKey('+', u, mode, idx++);
 		else if (plus[i] == 'o')
-			modeOp('+', u, mode, ++idx);
+			modeOp('+', u, mode, idx++);
 	}
 	for (size_t i = 0; i < minus.size(); i++) {
 		if (minus[i] == 'l')
@@ -257,9 +253,9 @@ void Channel::modeCmd(std::vector<std::string> mode, User &u) {
 		else if (minus[i] == 't')
 			modeTopic('-', u);
 		else if (minus[i] == 'k')
-			modeKey('-', u);
+			modeKey('-', u, mode, idx);
 		else if (minus[i] == 'o')
-			modeOp('-', u, mode, ++idx);
+			modeOp('-', u, mode, idx++);
 	}
 }
 
@@ -334,7 +330,34 @@ void Channel::modeLimit(char c, User &u, std::vector<std::string> &s, int i) {
 	answerto(msg, u.getFd());
 }
 
-void Channel::modeKey(char, User &) {}
+void Channel::modeKey(char c, User &u, std::vector<std::string> &s, int i) {
+	std::string msg = ":" + u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
+	if (c == '+') {
+	if (static_cast<size_t>(i) > s.size()) {
+			answerto(ERR_NEEDMOREPARAMS("+l", u.getNick()), u.getFd());
+			return ;
+		}
+		std::string pass = s[i];
+		if (!checkValid(pass)) {
+			answerto(ERR_UNKNOWNERROR(u.getNick(), "Invalid Password"), u.getFd());
+			return ;
+		}
+		if (mode.find("k") == std::string::npos)
+			mode += "k";
+		key = pass;
+		isPassProtected = true;
+		msg += "MODE #" + name + " +k           ; This channel is now password protected" + CRLF;
+	}
+	else {
+		size_t j = mode.find("k");
+		if (j != std::string::npos)
+			mode.erase(j, 1);
+		key = "";
+		isPassProtected = false;
+		msg += "MODE #" + name + " +k           ; This channel is not password protected anymore" + CRLF;
+	}
+	answerto(msg, u.getFd());
+}
 void Channel::modeOp(char c, User &u, std::vector<std::string> &s, int i) {
 	(void) c;
 	(void)u;
@@ -346,7 +369,7 @@ void Channel::setTopic(std::vector<std::string> s, User &u) {
 	// check que s est pas vide et : si que 2 petits points alors clear
 	if (s.empty()) {
 		if (topic.empty()) {
-			answerto(RPL_NOTOPIC(u.getNick(), u.getUsername(), name), u.getFd());
+			answerto(RPL_NOTOPIC(u.getNick(), name), u.getFd());
 			return ;
 		}
 		else {

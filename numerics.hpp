@@ -60,7 +60,7 @@
 
 #define ERR_CHANOPRIVSNEEDED(channel, nick) ":" + SERVER + " 482 " + nick + " #" + channel + " :You're not channel operator" + CRLF
 
-#define RPL_NOTOPIC(nick, username, channel) ":" + SERVER + " 331 "+ nick + " #" + channel + " :No topic is set" + CRLF
+#define RPL_NOTOPIC(nick, channel) ":" + SERVER + " 331 "+ nick + " #" + channel + " :No topic is set" + CRLF
 
 #define RPL_TOPIC(nick, channel, topic) ":" + SERVER + " 332 "+ nick + " #" + channel + " :" + topic + CRLF
 
