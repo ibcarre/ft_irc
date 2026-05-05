@@ -36,7 +36,7 @@
 
 #define QUITMSGNOPARAM(nick, username) ":" + nick + "!" + username + "@" + HOST + " QUIT " + ":Quit: See you later " + nick + "\n" + nick + " is exiting the network" + CRLF
 
-#define ERR_NOPRIVILEGES ":" SERVER + "481 :Permission Denied- You're not an IRC operator" + CRLF
+#define ERR_NOPRIVILEGES ":" + SERVER + "481 :Permission Denied- You're not an IRC operator" + CRLF
 
 #define ERR_NOSUCHNICK(nick) ":" + SERVER + " 401 " + nick + " :No such Nickname" + CRLF
 
