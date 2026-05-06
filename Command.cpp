@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ibaaziz <ibaaziz@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/29 18:25:01 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/05/06 15:28:44 by ibaaziz          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,7 +97,8 @@ void Command::cmdUser() {
 	if (_user->registered) {
 		answer(ERR_ALREADYREGISTERED);
 		return ;
-	}	size_t first = _params.find(' ');
+	}	
+	size_t first = _params.find(' ');
 	if (first == std::string::npos){
 		_user->setUsername(_params.substr(0, _params.length()));
 		_user->setRealName(_params.substr(0, _params.length()));
