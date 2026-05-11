@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ibaaziz <ibaaziz@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/05/06 15:28:44 by ibaaziz          ###   ########.fr       */
+/*   Updated: 2026/05/11 15:52:12 by ibtihal          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -601,7 +601,7 @@ void	Command::kick() {
 		return;
 	}
 	bool isAdmin = c->isUsAdmin(*_user);
-	if (!isAdmin && s_oper) {
+	if (!isAdmin && !s_oper) {
 		answer(ERR_NOPRIVILEGES);
 		return ;
 	}
@@ -614,7 +614,7 @@ void	Command::kick() {
 		if (split[i][0] == ':')
 			break;
 		bool isUser;
-		User u = _server->getUser(split[i], isUser);
+		User &u = _server->getUser(split[i], isUser);
 		if (!isUser) {
 			answer(ERR_NOSUCHNICK(split[i]));
 			continue;
@@ -668,7 +668,7 @@ void	Command::invite() {
 		answer(ERR_NOTONCHANNEL(_user->getNick(), channel));
 		return ;
 	}
-	if (c->invOnly && !c->isUsAdmin(*_user)) {
+	if (c->invOnly && !c->isUsAdmin(*_user) && !_user->oper) {
 		answer(ERR_CHANOPRIVSNEEDED(channel, _user->getNick()));
 		return ;
 	}
