@@ -65,7 +65,11 @@ void Channel::removeUser(User& user) {
 	std::cout << it->user->getFd() << std::endl;
 	for (size_t i = 0; i < users.size(); i++) {
 		if (users[i].user->getFd() == user.getFd()) { //it->user->getFd()
+			std::cout << "I " <<  i <<  std::endl;
 			bool admin = users[i].isAdmin;
+			s_user u = *(users.begin() + i);
+			std::cout << user.getNick() << " ASDASDASD" << std::endl;
+			std::cout << u.user->getNick() << " USER NICK" << std::endl;
 			users.erase(users.begin() + i);
 			nb--;
 			if (nb == 0) {
@@ -300,7 +304,7 @@ void Channel::modeInv(char c, User &u) {
 void Channel::modeLimit(char c, User &u, std::vector<std::string> &s, int i) {
 	std::string msg = ":" + u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
 	if (c == '+') {
-		if (static_cast<size_t>(i) > s.size()) {
+		if (static_cast<size_t>(i) >= s.size()) {
 			answerto(ERR_NEEDMOREPARAMS("+l", u.getNick()), u.getFd());
 			return ;
 		}
@@ -333,7 +337,7 @@ void Channel::modeLimit(char c, User &u, std::vector<std::string> &s, int i) {
 void Channel::modeKey(char c, User &u, std::vector<std::string> &s, int i) {
 	std::string msg = ":" + u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
 	if (c == '+') {
-		if (static_cast<size_t>(i) > s.size()) {
+		if (static_cast<size_t>(i) >= s.size()) {
 			answerto(ERR_NEEDMOREPARAMS("+l", u.getNick()), u.getFd());
 			return ;
 		}
@@ -360,8 +364,8 @@ void Channel::modeKey(char c, User &u, std::vector<std::string> &s, int i) {
 }
 void Channel::modeOp(char c, User &u, std::vector<std::string> &s, int i) {
 	std::string msg = ":" + u.getNick() + "!" + u.getUsername() + "@" + HOST + " ";
-	if (static_cast<size_t>(i) > s.size()) {
-		answerto(ERR_NEEDMOREPARAMS("+l", u.getNick()), u.getFd());
+	if (static_cast<size_t>(i) >= s.size()) {
+		answerto(ERR_NEEDMOREPARAMS("+o", u.getNick()), u.getFd());
 		return ;
 	}
 	std::string user = s[i];

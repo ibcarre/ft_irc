@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ibaaziz <ibaaziz@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/06 07:57:19 by homohame          #+#    #+#             */
-/*   Updated: 2026/05/11 15:52:12 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/05/12 13:22:20 by ibaaziz          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ void Command::processCmd() {
 	}
 	if (i == nb) {
 		std::cout << "Unknown command\n"; //421 "<client> <command> : Unknown command
+		answer(ERR_UNKNOWNCOMMAND(_cmd));
 		return ;
 	}
 	(this->*(func[i]))();

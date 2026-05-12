@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ibtihal <ibtihal@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ibaaziz <ibaaziz@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 04:50:15 by homohame          #+#    #+#             */
-/*   Updated: 2026/04/29 15:56:47 by ibtihal          ###   ########.fr       */
+/*   Updated: 2026/05/12 14:03:13 by ibaaziz          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,7 +139,7 @@ void Server::handleDisconnection(int i)
 	for (size_t j = 0; j < c.size(); j++) {
 		std::cout << "CHAN NAME " << c[j]->getName() << std::endl;
 		std::cout << "FD " << (users.begin() + i - 1)->getFd() << std::endl;
-		c[j]->removeUser(users[j]);
+		c[j]->removeUser(users[i - 1]);
 	}
 	users.erase(users.begin() + i - 1);
 }
@@ -268,7 +268,9 @@ std::deque<User>& Server::getAllusers() {
 
 void	answerto(std::string msg, int fd) {
 	std::cout << "MSG SENT " << msg << "\n";
-	std::cout << "NB SENT " << send(fd, msg.c_str(), msg.length(), 0) << "\n";
+	size_t i = 0;
+	i = send(fd, msg.c_str(), msg.length(), 0);
+	std::cout << "NB SENT " << i << "\n";
 }
 
 time_t Server::getCreation_time() {

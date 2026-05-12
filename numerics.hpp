@@ -81,3 +81,5 @@
 #define ERR_USERONCHANNEL(nick, channel) ":" + SERVER + " 443 " + nick + " #" + channel + " :Already on channel" + CRLF
 
 #define RPL_INVITING(nick, channel) ":" + SERVER + " 341 " + nick + " #" + channel + " :Invited to channel" + CRLF
+
+#define ERR_UNKNOWNCOMMAND(cmd) ":" + SERVER + " 421 " + cmd + " :No command given" + CRLF
