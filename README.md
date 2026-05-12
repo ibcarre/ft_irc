@@ -74,6 +74,7 @@ Then type `com`, press `Ctrl+D`, type `man`, press `Ctrl+D`, type `d`, press `En
 - [Modern IRC Client Protocol](https://modern.ircdocs.horse/)
 - [IRC Numerics Reference](https://www.alien.net.au/irc/irc2numerics.html)
 - [Beej's Guide to Network Programming](https://beej.us/guide/bgnet/)
+- [Poll](https://www.ibm.com/docs/fr/i/7.5.0?topic=designs-using-poll-instead-select)
 
 ### AI Usage
 
